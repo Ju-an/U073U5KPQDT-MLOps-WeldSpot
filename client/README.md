@@ -54,31 +54,44 @@ Final output should look like:
 ## Firebase (Backend)
 Install Firebase CLI (Requires NPM utility that comes from installing Node.js).
 ```ps
-npm install -g firebase-tools
+sudo apt update
+sudo apt purge nodejs
+sudo apt purge npm
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.39.7/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+nvm install 20
+node -v # should print `v20.16.0`
+npm -v # should print `10.8.1`
 ```
 
 Install FlutterFire CLI
 ```ps
 cd client
+sudo npm install -g firebase-tools
 dart pub global activate flutterfire_cli
 dart --disable-analytics
-export PATH="$PATH":"$HOME/.pub-cache/bin"
+export PATH="$PATH":"$HOME/.pub-cache/bin:/mnt/c/Windows/system32"
 ```
 You may see a message like: "Warning: Pub installs executables into C:\Users\<username>\AppData\Local\Pub\Cache\bin, which is not on your path." -> Add the path to your PATH environment variables.
 
 Login to firebase account (You can create Spark Plan account with Google for 0$ - no monthly cost; aka free but limited resources)
 ```ps
-firebase login
+firebase login --no-localhost
 ```
+Follow instructions and links the terminal will give to open browser to copy and pass authorization code.
 
 Initialize firebase in flutter project:
 ```ps
 firebase init
 ```
+Recommended to not override the provided rules.
+
 * Select the features to use: Storage, Emulators.
 * Create a new Firebase project to associate the flutter project.
 * If error "Cloud resource location is not set", use Firebase Web Interface to set Cloud Storage product: https://console.firebase.google.com/u/0/project/<name-of-project>/storage -> Start
-* Configure emulators with the default ports.
+* Configure emulators with the default ports: Authentication and Storage (not Firestore) recommended.
 
 
 Create configuration file.
