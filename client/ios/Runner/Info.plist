@@ -27,11 +27,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera Permission</string>
+	<string>We need access to the camera for image classification.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone Permission</string>
+	<string>We need access to the microphone for recording videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Photo Library Permission</string>
+	<string>We need access to the photo library for image classification.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

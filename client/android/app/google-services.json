@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1095871114500",
+    "project_id": "welding-defects-models",
+    "storage_bucket": "welding-defects-models.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095871114500:android:f5a785edab8b8da6abb451",
+        "android_client_info": {
+          "package_name": "org.tensorflow.image_classification_mobilenet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrL5X9UResq0OaKj9moxKSTlvd7tQcvrk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
