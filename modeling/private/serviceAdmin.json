@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "welding-defects-models",
+  "private_key_id": "34cead64723a18655592d8879a79f2bbccc35663",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC60BooRdCwcLaP\nc41f1ntCxXQwhPPfYUrDj7GuJER3A+Y9AIC8l1aP6ibw0ZsKexpu94F2sGfGHGYN\nnLzmKHBtAAZaENsJZRpF5CWYobRGsxo+ZEe3Gvr2/f4c916vcskaen23qsJuzwxQ\noi9Le9MGmEsZVuAoUDC/jVpE7Yn+IPBE8Q2eeqlGmwzNj3j8llQ+kk0R343Cs2Gx\n2tcP3JYLvN8Ltk5DoTg8Ty/srfSSZCX5FOMddVATt+yrgvtXaOvg1cvZnRE52KPy\n34KrH6fnDX06pxe+OYtWm7YJSPyHoXGnIZ+qKny8zdZ+ZPOdk0M1NasBukaFEWTI\nqzxxYBlpAgMBAAECggEAAed1HMv5YJMFiVjILB3ni7qvgH8abUB0nqGsUfYUrJHh\nmuWSalmwjC76zqGUTvsKPe9P5oHNzPslHyZl1oK7AqFpbymU0fex2NyGdZPQXpgc\nwF4NTRR9Ul8sY+cxk+A7pIVzGpgm+zIpEflVOhO9Bugue8ei6UZH+Ovb66/wJCL1\nWqKppR8AYri9BHOvQsC1S9Cp1BzNGZ5+v3eyMUSzwEB5GGS+/njafRDzGJUNeelC\nFe5KEwfaigtiQpTXuKiHqko3XGe2GYHOi4lthZnO0avdX7NH26l9XZO1ObmtRf5v\nAkSfdBfxOaFq//3vDdEXTWwvseqrIk5kR08R0J/TwQKBgQDdXyg+joYpJQqysZ8x\nftEMBVktNOplNWvLpfZYn/ENYtZplOR62dVWKIFAuPGCZiU41FAWooK55ABoYyNj\nrOnxBG/xcyA4fvbAoBrKyaVpzsFht6prHvjmT6mZhrrsJsDmhj8wypD+4mH1Z1F9\nwZySHVdOPohSbi4kEK0c2nqCLQKBgQDYCQkVqQAvwhdZpyqkEPG37VvAhhsEXenv\nvMa7YowZ7ENzmV8XKXi8jR8eItEeQjEhkv8MW4zPteDKC2Zf57eTEtzKEP+4Ekuj\n9UUUOqUA+iSd+k4WzLlaRWJ5eD68MXfrbzSNQfBdDw+pXTuurGMZ5wK5dyzzt0LW\nS2d3FYBFrQKBgQCQtJtCCTh5vNT5alJ9sEBGc1iPzH9MGVeVj68wz5xq+6jc649P\nHwXthBy5iiuU6eB6/Y48vY5mpTv/AI8poOZrvlLOqkrto1D5Ka9Zz+Zo+9Y9Yins\nTBq3smtTCFc39z0xc5/q7P9LHgCawibq5ZzLhpKDeyzxdUSEHsKKkeZzIQKBgEH7\nAHtNEnGDpf4LwEo7ope6NrumObortLczwL6aao/ASRmVTiWU1PtBXq+lkpjbPoYy\njxMHIwqNUgpjUPEZpEeXCzfr2S4u6Es7Lc3v21VhEK3vNMph3Hpllp3iy8ZOlYGi\nhTpfWToSz4W6o+/FVr8ifwKGE4ScBB3PCdqlBnhBAoGAN+7T5C0sICB1CcLru6Ib\ndACf/ma1wdB87IxSbihTkL5cgVWpsV2Bg1hRf3PPzMLnj1sFIPcWw2UDcMWTgcTF\nwU98p40YbN5BdKs3F7Pcc7dT3wZ7xJTsGIuOMNWL8Wgo8HVnI+Ac3QFCJKoS1BPj\nIz8G5xik6nJQ1KuByO+JYWE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-614zj@welding-defects-models.iam.gserviceaccount.com",
+  "client_id": "101693842273237512399",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-614zj%40welding-defects-models.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
