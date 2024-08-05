@@ -1,41 +1,57 @@
 
 # Installation
 
-## TensorFlow with GPU support on NVIDIA GPUs (Linux Machine / WSL)
+## Flutter (Frontend)
 
-Install Miniconda (Python environment)
-```sh
-curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+1. Access: https://docs.flutter.dev/get-started/install
+2. In the flutter website, select the OS you downloaded the project (recommended to clone my repo on linux).
+3. In the flutter website, for "Choose your first type of app" select **Android**.
+4. Follow the instructions to install android sdk, build tools and flutter.
 
-bash Miniconda3-latest-Linux-x86_64.sh
+```
+sudo apt update -y && sudo apt upgrade -y
+sudo apt install -y curl git unzip xz-utils zip libglu1-mesa
+sudo apt install -y libc6:amd64 libstdc++6:amd64 libbz2-1.0:amd64
+sudo apt install -y lib32z1 libgtk-3-dev
+sudo apt install -y android-sdk android-sdk-build-tools
+sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
 ```
 
-Create the environment for Python 3.10
-```sh
-conda create --name weld python=3.10
+```
+wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.3-stable.tar.xz
+tar xf flutter_linux_3.22.3-stable.tar.xz
+mv flutter $HOME/fluttersdk
+export PATH="`pwd`/fluttersdk/bin:$PATH"
+flutter --disable-analytics
+flutter precache
+rm flutter_linux_3.22.3-stable.tar.xz
+sudo apt install google-android-cmdline-tools-10.0-installer
+```
+5. Install the Android SDK and accept license terms (y)
+
+```
+mkdir -p $HOME/Android/sdk/
+sdkmanager --sdk_root=$HOME/Android/sdk "platform-tools" "platforms;android-34" "build-tools;34.0.0" "cmdline-tools;latest"
+flutter config --android-sdk $HOME/Android/sdk
+yes | sdkmanager --licenses
+flutter doctor --android-licenses
+flutter doctor
 ```
 
-Start the environment before runing any pip or python code
-```sh
-conda activate weld
+Final output should look like:
+```
+[✓] Flutter (Channel stable, 3.22.3, on Ubuntu 24.04 LTS 5.15.153.1-microsoft-standard-WSL2, locale C.UTF-8)
+[✓] Android toolchain - develop for Android devices (Android SDK version 34.0.0)
+[✓] Chrome - develop for the web
+[✓] Linux toolchain - develop for Linux desktop
+[!] Android Studio (not installed)*
+[✓] Connected device (2 available)
+[✓] Network resources
 ```
 
-Install requirements
-```sh
-python -m pip install -U pip
-pip install -r requirements
-```
+* Don't worry about Android Studio, we are using VS Code IDE.
 
-Test GPU support (ignore warnings printed)
-```sh
-python -c "import tensorflow as tf; print('********* AVAILABLE GPUS:', tf.config.list_physical_devices('GPU'), '*********')"
-```
-GPU printed should contain: `[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]`
-
-## Flutter (Frontend) & Firebase (Backend)
-
-Follow instructions to install Flutter: https://docs.flutter.dev/get-started/install
-
+## Firebase (Backend)
 Install Firebase CLI (Requires NPM utility that comes from installing Node.js).
 ```ps
 npm install -g firebase-tools
@@ -43,7 +59,10 @@ npm install -g firebase-tools
 
 Install FlutterFire CLI
 ```ps
+cd client
 dart pub global activate flutterfire_cli
+dart --disable-analytics
+export PATH="$PATH":"$HOME/.pub-cache/bin"
 ```
 You may see a message like: "Warning: Pub installs executables into C:\Users\<username>\AppData\Local\Pub\Cache\bin, which is not on your path." -> Add the path to your PATH environment variables.
 
