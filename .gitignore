@@ -169,6 +169,5 @@ cython_debug/
 **/data/**/*.jpg
 tmp/
 temp/
-
-# Flutter
-fluttersdk/
+modeling/private/
+serviceAdmin.json

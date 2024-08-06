@@ -14,12 +14,50 @@ ifneq (,$(wildcard ./.env))
 endif
 
 setup:
-	sudo apt update && \
+	# Dependencies for the main project
+	sudo apt update && -y && sudo apt upgrade -y && \
 	sudo apt install python3 python3-venv python3-pip pre-commit -y && \
 	pre-commit install && \
+	# Configure the modeling project
 	cp .env $(PROJECT_SERVER)/.env && \
 	cp serviceAdmin.json $(PROJECT_SERVER)/private/serviceAdmin.json && \
-	$(MAKE) -C $(PROJECT_SERVER) configure
+	$(MAKE) -C $(PROJECT_SERVER) configure && \
+	# Dependencies for the client project
+	sudo apt install -y curl git unzip xz-utils zip libglu1-mesa && \
+	sudo apt install -y libc6:amd64 libstdc++6:amd64 libbz2-1.0:amd64 && \
+	sudo apt install -y lib32z1 libgtk-3-dev && \
+	sudo apt install -y android-sdk android-sdk-build-tools && \
+	sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev && \
+	# Android and flutter setup
+	wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.3-stable.tar.xz && \
+	tar xf flutter_linux_3.22.3-stable.tar.xz && \
+	mv flutter $HOME/fluttersdk && \
+	export PATH="$HOME/fluttersdk/bin:$PATH" && \
+	flutter --disable-analytics && \
+	flutter precache && \
+	rm flutter_linux_3.22.3-stable.tar.xz && \
+	sudo apt install google-android-cmdline-tools-10.0-installer && \
+	mkdir -p $HOME/Android/sdk/ && \
+	sdkmanager --sdk_root=$HOME/Android/sdk "platform-tools" "platforms;android-34" "build-tools;34.0.0" "cmdline-tools;latest" && \
+	flutter config --android-sdk $HOME/Android/sdk && \
+	yes | sdkmanager --licenses && \
+	flutter doctor --android-licenses && \
+	flutter doctor && \
+	# Dependencies for firebase
+	sudo apt update && \
+	sudo apt purge nodejs && \
+	sudo apt purge npm && \
+	curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.39.7/install.sh | bash && \
+	export NVM_DIR="$HOME/.nvm" && \
+	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm && \
+	[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion && \
+	nvm install 20 && \
+	node -v # should print `v20.16.0` && \
+	npm -v # should print `10.8.1` && \
+	# Configure the client project
+	cp .env $(PROJECT_CLIENT)/.env && \
+	$(MAKE) -C $(PROJECT_CLIENT) configure
+
 
 # Rules to run specific commands of each project
 model_%:

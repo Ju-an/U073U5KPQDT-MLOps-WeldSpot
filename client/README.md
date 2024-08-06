@@ -21,7 +21,7 @@ sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
 wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.3-stable.tar.xz
 tar xf flutter_linux_3.22.3-stable.tar.xz
 mv flutter $HOME/fluttersdk
-export PATH="`pwd`/fluttersdk/bin:$PATH"
+export PATH="$HOME/fluttersdk/bin:$PATH"
 flutter --disable-analytics
 flutter precache
 rm flutter_linux_3.22.3-stable.tar.xz
