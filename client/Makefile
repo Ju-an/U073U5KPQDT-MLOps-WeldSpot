@@ -16,6 +16,9 @@ endif
 icon:
 	dart run flutter_launcher_icons
 
+setup:
+	$(MAKE) -f $(PARENT_MAKEFILE) setup
+
 configure:
 	# Firebase CLI
 	sudo npm install -g firebase-tools

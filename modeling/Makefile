@@ -18,27 +18,25 @@ clean:
 #	rm .env $(DOCKER_IMAGE_NAME).tar private
 
 # Setup the dependencies
-install: setup
+configure:
 	python3 -m venv .venv && \
 	source .venv/bin/activate && \
 	python3 -m pip install -U pip && \
-	pip install -r requirements.txt
-
-configure:
-	@echo "PREFECT_CLOUD_API_KEY=$$PREFECT_CLOUD_API_KEY"
+	pip install -r requirements.txt && \
+	@echo "PREFECT_CLOUD_API_KEY=$$PREFECT_CLOUD_API_KEY" && \
 	prefect cloud login --key $$PREFECT_CLOUD_API_KEY
 
-quality: install
+quality:
 	source .venv/bin/activate && \
 	PYTHONPATH=$(PROJECT_PATH) isort . && \
 	PYTHONPATH=$(PROJECT_PATH) black . && \
 	PYTHONPATH=$(PROJECT_PATH) pylint --recursive=y .
 
-unit_tests: install
+unit_tests:
 	source .venv/bin/activate && \
 	PYTHONPATH=$(PROJECT_PATH) pytest tests/
 
-integration_test: install
+integration_test:
 	source .venv/bin/activate && \
 	echo "Integration test not implemented for Dataset project"
 
@@ -51,6 +49,6 @@ export_image: build_image
 run_image: build_image
 	docker run -it $(DOCKER_IMAGE_NAME)
 
-run_app: install
+run_app:
 	source .venv/bin/activate && \
 	PYTHONPATH=$(PROJECT_PATH) python3 app.py

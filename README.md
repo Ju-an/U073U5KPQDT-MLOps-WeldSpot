@@ -105,8 +105,12 @@ Instructions on how to use and configure the app to work with your Firebase acco
 
 # Installation
 
+It is recommended to use a clean installation of linux (or WSL), preferably Ubuntu 22.04+,
+as the setup script installs several packages, including specific android sdk version.
+If conflicts arise you may check the Makefile `setup` and `dependencies_` scripts for troubleshooting.
+
 1. Clone this repo (`git clone ...`) if you haven't.
-2. `cd` to the project and call `make model_install` to run the Makefile script that sets everyting up.
+2. `cd` to the project and call `make setup` to run the Makefile script that sets everyting up.
 3. `cd` to the client subfolder and call `firebase login --no-localhost` this requires you to login to your browser firebase account to complete configuration.
 4. run `firebase init` after succesfully login.
 
