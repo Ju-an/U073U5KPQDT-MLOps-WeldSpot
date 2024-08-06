@@ -12,15 +12,21 @@ However, when there are a lot of welding points to check in a structure, a human
 Having an AI-tool to aid during that step can mitigate some of the human errors and prevent failures in the welding to become a major inconvenience.
 This project proposes the use of computer vision to automate the visual inspection of weldings, reducing time, costs and failures.
 
+The application of AI requires a lot of components that should communicate well. So, applying MLOps practices will be important for the success of the project.
+
+---
+
 # Table of Contents
-- [Objective](#objective)
-- [Structure](#structure)
-  - [Data](#data)
-  - [Modeling](#data)
-  - [Cloud](#data)
-    - [Containers](#containers)
-  - [Client](#data)
-- [Installation](#installation)
+- [Objective](#Objective)
+- [Structure](#Structure)
+  - [Data](#Data)
+  - [Modeling](#Modeling)
+  - [Cloud](#Cloud)
+    - [Containers](#Containers)
+  - [Client](#Client)
+- [Installation](#Installation)
+
+---
 
 # Objective
 
@@ -32,11 +38,14 @@ The MLOps Lifecycle presented in this repository should be a starting point to a
 
 # Structure
 
-The following is a diagram that shows each part of the project, involving all required parts like client app, data, cloud deployment, etc. This project is centered in MLOps, although DevOps (CI/CD) is also integrated.
+The following is a diagram that shows how the project is built.
+This involves all required parts like client app, data, cloud deployment, etc. This project is centered in MLOps, although DevOps (CI/CD) is also integrated.
 
 ![Project Architecture](images/WeldSpot.png)
 
 This project is divided into three main components: The modeling service, the cloud and the client app.
+
+Following sections overview the technologies employed. You can skip to the [Installation](#Installation) section for instructions on how to configure everything (including the creation of cloud accounts).
 
 ## Data
 As it can be observed in the illustration, data for model training comes from two sources:
@@ -47,10 +56,10 @@ As it can be observed in the illustration, data for model training comes from tw
 When training the models, data is divided in 3 folders, namely "train" for ML training epochs, "valid" for ML validation epochs, and "test" for testing and evaluation.
 Each of these folders, at the same time, contains subfolders for each of the possible classes identified: Background (no welding present), Bad Welding, Crack, Excess Reinforcement, Good Welding, Porosity, and Splatters.
 
-The Weld Quality Inspection dataset does not contain "background" images (which may help improve our model learning performance). So I curated a set of random unrelated images for the initial dataset from public sources.
+The Weld Quality Inspection dataset does not contain "background" images (which may help improve our model learning performance). So I curated a set of random unrelated images for the initial dataset from public sources (included in the `initial.zip` file).
 
 ## Modeling
-The two processes that communicate with the cloud deployment are developed inside the `modeling` folder: **Dataset Collection** and **Model Training**, with the following structure:
+The two processes that communicate with the cloud deployment are developed inside the `modeling` folder: **Dataset Collection** process and **Model Training** process, with the following structure:
 
 ```
 modeling/
@@ -62,8 +71,8 @@ modeling/
 ├──app.py: Entry point to execute the modeling service.
 ├──tests/: Where pytest unit tests are stored.
 ├──private/: Where private data (e.g., cloud authentication keys) are stored.
-├──flows/: Orchestration workflows.
-|  ├──register_flows.py: For registering all the prefect flows.
+├──flows/: Orchestration workflows using prefect.
+|  ├──register_flows.py: For registering all the prefect flows with the cloud service.
 |  ├──collection_pipeline.py: For the Dataset Collection pipeline.
 |  └──training_pipeline.py: For the Model Training pipeline.
 ├──data/: Where datasets are stored.
@@ -72,42 +81,172 @@ modeling/
 |  ├──procesed/: Where the preprocessing tasks stores the images.
 |  ├──augmented/: Where augmented images are stored after the preprocess.
 |  ├──splits/: Where the final, splitted (train, valid, test) versions are stored for training.
-|  └──initial.zip: Background class initial split to use with roboflow dataset.
-└──service/: Where the rest of the python code is located.
-
-###### NOTE: Some of the paths may be missing and are created when following the [installation instructions](#installation).
-
+|  └──initial.zip: Background class initial data to use with roboflow dataset.
+└──service/: Where the rest of the python code is located (employed by the pipelines mostly).
 ```
+
+###### NOTE: Some of the paths may be missing and are created when following the [installation instructions](#Installation).
 
 ## Cloud
 
 Two cloud services are employed:
 
 * [Firebase](https://firebase.google.com/) from google, is like GCP but more focused to smartphone apps. Offers a _Spark Plan_ with limited free services.
-* [Prefect 2](https://docs.prefect.io/latest/) cloud account is free too. We can run the pipeline in a container and monitor it from the cloud.
+* [Prefect 2](https://docs.prefect.io/latest/) cloud account is free too with enough limited resources for testing the project. We can run the pipeline in a container and monitor it from the cloud.
 
-Instructions on how to create accounts and configure them are provided in the [Installation](#installation) section.
+Instructions on how to create accounts and configure them are provided in the [Installation](#Installation) section.
 
 ### Containers
 
 The data collection and model training are built to run on docker container and tested with Ubuntu image.
 Because I am using a Windows machine, I installed [Docker Desktop](https://www.docker.com/products/docker-desktop/) and configured it to use [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/windows/wsl/install). Only installing [Docker](https://docs.docker.com/engine/install/) in your system or deploying to cloud should also work.
 
-Instructions on how to generate the docker image are provided in the [Installation](#installation) section.
+Instructions on how to generate the docker image are provided in the [Installation](#Installation) section.
 
 Additionally, if using WSL, for allowing NVIDIA GPU in model training, the Windows machine should have updated [NVIDIA Drivers](https://www.nvidia.com/Download/index.aspx) installed. This is optional if no NVIDIA GPU is available, but will increase the training speed.
 
 ## Client
 There is an app based in [example of TFLite plugin for flutter](https://github.com/tensorflow/flutter-tflite/tree/main/example/image_classification_mobilenet).
-It is built for android with the APK already included. The project can also be built for iOS, although I haven't tested.
+I have already built it for android and include the APK to save some configuration headaches. The project can also be built for iOS, although I haven't tested.
 
 Instructions on how to use and configure the app to work with your Firebase account are provided later.
 
 # Installation
 
-It is recommended to use a clean installation of linux (or WSL), preferably Ubuntu 22.04+,
+It is recommended to use a clean installation of linux (or WSL, or a docker container), preferably Ubuntu 22.04+,
 as the setup script installs several packages, including specific android sdk version.
-If conflicts arise you may check the Makefile `setup` and `dependencies_` scripts for troubleshooting.
+If conflicts arise, you may check the Makefile `setup` and `dependencies_` scripts for troubleshooting.
+
+## Accounts setting
+
+All of the 3 services we are going to create and account with allow to use google and similar accounts to avoid having to create accounts with mail and password. So you may consider that.
+
+### Roboflow
+
+From Roboflow we only require an API key so they allow us to download datasets from python code.
+
+I provided the API key of my account to save your time creating more accounts. But in case my key stops working you can create an account and set the key following these steps:
+
+1. Access [Robofow](https://app.roboflow.com/) and sign-in.
+2. Browse to the [Weld quality inspection Dataset](https://universe.roboflow.com/welding-2bplp/weld-quality-inspection-rei9l/dataset/9) we are going to use.
+3. In the upper right corner, click on **Download Dataset**, select _Pascal VOC_ format, _show download code_ option and click _Continue_.
+
+![Dataset export](images/DatasetExport.png)
+
+4. It will show a snippet with hidden text as in the following image.
+
+![Download script](images/DatasetCode.png)
+
+5. The rest of the script is already configured in the project, we only need to copy that hidden text by selecting it normally and pasting it. **Copy it to a text note as we will use it later**.
+
+### Prefect
+
+1. Access [Prefect Cloud](https://app.prefect.cloud/) and sign-in.
+2. Configure your account if you haven't yet, with a name that hasn't been used by other users.
+
+![Prefect account](images/PrefectAccount.png)
+
+3. If presented with any _Get Started_ step, we will skip for now by pressing **Next** and **Skip this step**. (We don't create any flow yet).
+
+4. In the upper left side of your prefect dashboard you'll see a "default" option. Click on it, and then in _API Keys_.
+
+5. **Create API Key +**, pick a _Name_ and _Expiration Date_.
+
+6. Copy the key, will look something similar like "pnu_aBBcDeFFgH1J23KKllMMnnnn4OOppp5qqqqR".
+
+7. Similar to the Roboflow key, **copy it to a text note as we will use it later**. Don't lose the key, because it won't be printed again and you'll have to create another.
+
+8. Now, we go back to the prefect dashboard (exit _Settings_).
+
+#### Automation
+
+Here we are going to send an alert when there is drift. So, besides retraining (already programmed in the project), we can receive an email notifying when drift occurs.
+
+1. Click on the **Automation** from the left side of the menu.
+
+![Create Automation](images/PrefectAutomationCreate.png)
+
+2. First, we need the trigger (the event that causes the automation to start). We select **Custom** as the type, and write "drift.detected" as the matching event and "dataset.auc" as the resource. Configuration should look like following image.
+
+![Automation Trigger](images/PrefectAutomationTrigger.png)
+
+3. Next, as action we pick _Send a notification_. We can leave the default body. Now we click on the **Block** option to fill it.
+
+![Automation Action](images/PrefectAutomationAction.png)
+
+4. In the **Block** option we have to input the mail (or mails) address that receive the notification alert.
+
+![Automation Mail](images/PrefectAutomationMail.png)
+
+5. We set the email-block with your e-mail as in the picture and confirm.
+
+### Firebase
+
+1. Sign-in into [Firebase Console](https://console.firebase.google.com/u/0/) and create a project with "Start with Firebase Project" option. (We don't need credit card information).
+
+![Firebase Account](images/FirebaseCreateProject.png)
+
+2. Project names use a unique identifier (not already taken). Accept terms and proceed.
+
+3. We don't need to use Google Analytics for our project. Create Project and wait for resources to be provided.
+
+#### Features
+
+We now have to setup a series of features so the firebase project works with our project.
+
+##### Android (Firebase)
+
+In the Firebase Console, after selecting the project, we will see a Get Started with your app. We can set iOS if you want to give support to iPhone. But as I can only test with an Android device, I only configure Android.
+
+The default included flutter app project compiles the Android app with package name "weld.spot", so you have to specify this name for use in the already built APK, or generate your own custom Android package name and rebuild the android (flutter) app following later instructions in this readme.
+
+It will give you a Download google-services.json button you must click, and copy the file to the root folder of our project `google-services.json`. We can skip the rest of the steps that say Add Firebase SDK, as that is already automated by this project. Return to Console.
+
+#### Storage (Firebase)
+
+Images sent by users must be stored in the cloud for their analysis for drift and retraining.
+Firebase offers multiple solutions for storing data.
+Some are for storing relational data, pair-keys values, fast access, large-size, etc. For the storage of images, the most appropriate is Firebase Storage, which is shared with google clouds storage (Firebase is owned by Google).
+
+![Select Product](images/FirebaseAllProducts.png)
+
+To configure Storage, we select "All products" on the left side menu and pick the one that is called "Storage" below and select start/begin option.
+
+![All products](images/FirebaseProducts.png)
+
+In the Storage configuration, we select development mode for the security rules, and the location that is most close to us if possible. Wait for the bucket to be created.
+
+![Firebase Storage](images/FirebaseStorageBucket.png)
+
+We will now copy the bucket URL, it should look like "gs://project-name-id.appspot.com", we copy it without the "gs://" and without the ".appspot.com" parts. (This is our project unique identifier we will use later). So, copy the code "project-name-id" part and save in a text note for later.
+
+#### Authentication (Firebase)
+
+Because users upload images to the cloud, we require authentication to connect to the service. End-users will be able to send images for the drift analysis and retraining when logged in.
+
+We can set multiple authentications (e.g., email, github, google, etc), but the project currently does not implement any.
+
+We start by going to the All products, like before, and select Authentication and start.
+
+We select the native provided "Anonymous" and enable it, so we don't force users to be logged in without any account, only logged as guests. (**![Privacy Warning](images/Warning.png) Note this is just for development purposes, as you would not want unidentified users uploading images**).
+
+#### Firebase ML
+
+Finally, models are also deployed through Firebase, as it offers a way to store the tensorflow lite files (used by the flutter app).
+
+Again, we go to **All products**, and select **Machine Learning**. As we implement our own trained model, we are not using Google's Machine Learning services (only the storage). Therefore, we go to the Custom Tab.
+
+![Firebase ML](images/FirebaseMLCustom.png)
+
+There, we can manually manage our models. But the project already programmed the automatic staging and deployment.
+
+#### Admin download
+
+The access through the devices and from the dataset collection and model deployment services has been programmed. Nonetheless, we need access to the proper firebase credentials.
+
+To do this, we
+
+## Project setting
 
 1. Clone this repo (`git clone ...`) if you haven't.
 2. `cd` to the project and call `make setup` to run the Makefile script that sets everyting up.
