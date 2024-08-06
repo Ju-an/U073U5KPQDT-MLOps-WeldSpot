@@ -47,6 +47,21 @@ This project is divided into three main components: The modeling service, the cl
 
 Following sections overview the technologies employed. You can skip to the [Installation](#Installation) section for instructions on how to configure everything (including the creation of cloud accounts).
 
+.pre-commit-config.yaml
+The base structure of the project contains the following:
+
+```
+README.md: The document you are reading now. Please, follow the instructions carefully.
+.pre-commit-config.yaml: The pre-commit hooks.
+Makefile: The make scripts for settings most of the things in this project.
+modeling/: The data prepration and model training and deployment. Contents explained later.
+client/: The client flutter app, explained later.
+images/: Images used by the readme.
+.env: File will be created after following instructions. Used to pass environment variables through the scripts.
+google-services.json: File will be created after following instructions. Settings configured in the cloud.
+serviceAdmin.json: File will be created after following instructions. Admin keys for managing the cloud.
+```
+
 ## Data
 As it can be observed in the illustration, data for model training comes from two sources:
 
