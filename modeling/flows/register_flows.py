@@ -5,7 +5,8 @@ from prefect.events.schemas.automations import EventTrigger
 from flows.collection_pipeline import initial_dataset_flow, periodic_monitoring_flow
 from flows.training_pipeline import initial_training_flow, periodic_retraining_flow
 
-DATASET_SCHEDULE = "0 12 * * *" # Daily at 12:00 PM #TODO: .env
+DATASET_SCHEDULE = "0 12 * * *" # Daily at 12:00 PM
+MODELING_SCHEDULE = "0 13 * * *" # Daily at 13:00 PM
 
 def register_flows():
     initial_dataset_flow()
@@ -15,9 +16,10 @@ def register_flows():
     initial_training_flow()
     modeling_pipeline = periodic_retraining_flow.to_deployment(name="Modeling Deployment Pipeline",
                         description="Daily flow for training the model with the new dataset and evaluate its performance.",
-                        cron=DATASET_SCHEDULE, tags=["modeling", "model training", "model evaluation"])
+                        cron=MODELING_SCHEDULE, tags=["modeling", "model training", "model evaluation"])
 
     serve(dataset_pipeline)
+    serve(modeling_pipeline)
 
 # Register the flows with Prefect
 if __name__ == "__main__":

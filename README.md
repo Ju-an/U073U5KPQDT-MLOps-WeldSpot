@@ -152,7 +152,7 @@ From Roboflow we only require an API key so they allow us to download datasets f
 
 5. The rest of the script is already configured in the project, we only need to copy that hidden text by selecting it normally and pasting it. **Copy it to a text note as we will use it later**.
 
-### Prefect
+### [Prefect 2](https://docs.prefect.io/latest/).
 
 1. Access [Prefect Cloud](https://app.prefect.cloud/) and sign-in.
 2. Configure your account if you haven't yet, with a name that hasn't been used by other users.
@@ -193,7 +193,7 @@ Here we are going to send an alert when there is drift. So, besides retraining (
 
 5. We set the email-block with your e-mail as in the picture and confirm.
 
-### Firebase
+### [Firebase](https://firebase.google.com/).
 
 1. Sign-in into [Firebase Console](https://console.firebase.google.com/u/0/) and create a project with "Start with Firebase Project" option. (We **don't** need credit card information).
 
@@ -373,19 +373,37 @@ Fill the values in `android/app/src/main/res/values/values.xml` with the data in
 
 5. Create container image for not running locally with `
 
-## Requirements
+## Running the service
 
-### Local machine
+Besides the `.env` file you've set. You can check the `options.py` of the `modeling` service for configuration like how the images are passed for training.
+For example, you can change the batches and epochs trained to ensure the CPU/GPU can load them.
 
-### Cloud accounts
+You can use `make model_unit_tests` (from the main Makefile) or `make unit_tests` (from the modeling Makefile) to run the unit tests and check everything works.
 
-#### [Firebase](https://firebase.google.com/).
+Other files you may want to check are the ones in the `flows` folder, that belong to the orchestration based on Prefect 2.
+Specially, the file `register_flows.py` schedules the tasks for the two services: Data Collection & Model Training.
+They all depend on the code programmed inside the `service` folder, which you can also check to find all the code programmed.
+
+### Orchestration
+
+This section details the Prefect flows created (orchestration pipelines of our services):
+
+* Data Collection, found in `collection_pipeline.py`.
+* Model Training, found in `training_pipeline.py`.
+
+#### Data Collection
 
 
 
-#### [Prefect 2](https://docs.prefect.io/latest/).
+#### Model Training
 
-# Monitoring:
+
+
+##### Experiment Tracking:
+
+Because TensorFlow is used for training models, it offers TensorBoard, which allows to monitor and view graphics of training performance.
+
+
 Evidently, WhyLabs/whylogs, ...
 https://blog.tensorflow.org/2020/06/enhance-your-tensorflow-lite-deployment-with-firebase.html
 
