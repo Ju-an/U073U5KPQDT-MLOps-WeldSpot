@@ -33,7 +33,7 @@ dependencies_flutter:
 	flutter --disable-analytics && \
 	flutter precache && \
 	rm flutter_linux_3.22.3-stable.tar.xz && \
-	sudo apt install google-android-cmdline-tools-10.0-installer && \
+	sudo apt install google-android-build-tools-34.0.0-installer google-android-cmdline-tools-10.0-installer && \
 	mkdir -p $HOME/Android/sdk/ && \
 	sdkmanager --sdk_root=$HOME/Android/sdk "platform-tools" "platforms;android-34" "build-tools;34.0.0" "cmdline-tools;latest" && \
 	flutter config --android-sdk $HOME/Android/sdk && \

@@ -47,19 +47,19 @@ This project is divided into three main components: The modeling service, the cl
 
 Following sections overview the technologies employed. You can skip to the [Installation](#Installation) section for instructions on how to configure everything (including the creation of cloud accounts).
 
-.pre-commit-config.yaml
 The base structure of the project contains the following:
 
 ```
-README.md: The document you are reading now. Please, follow the instructions carefully.
-.pre-commit-config.yaml: The pre-commit hooks.
-Makefile: The make scripts for settings most of the things in this project.
-modeling/: The data prepration and model training and deployment. Contents explained later.
-client/: The client flutter app, explained later.
-images/: Images used by the readme.
-.env: File will be created after following instructions. Used to pass environment variables through the scripts.
-google-services.json: File will be created after following instructions. Settings configured in the cloud.
-serviceAdmin.json: File will be created after following instructions. Admin keys for managing the cloud.
+WeldSpot/
+├─README.md: The document you are reading now. Please, follow the instructions carefully.
+├─.pre-commit-config.yaml: The pre-commit hooks.
+├─Makefile: The make scripts for settings most of the things in this project.
+├─modeling/: The data prepration and model training and deployment. Contents explained later.
+├─client/: The client flutter app, explained later.
+├─images/: Images used by the readme.
+├─.env: File will be created after following instructions. Used to pass environment variables through the scripts.
+├─google-services.json: File will be created after following instructions. Settings configured in the cloud.
+├─serviceAdmin.json: File will be created after following └─instructions. Admin keys for managing the cloud.
 ```
 
 ## Data
@@ -134,7 +134,7 @@ If conflicts arise, you may check the Makefile `setup` and `dependencies_` scrip
 
 ## Accounts setting
 
-All of the 3 services we are going to create and account with allow to use google and similar accounts to avoid having to create accounts with mail and password. So you may consider that.
+All of the 3 services we are going to create an account with allow to use google and similar accounts to avoid having to create accounts with mail and password. So you may consider that.
 
 ### Roboflow
 
@@ -181,11 +181,11 @@ Here we are going to send an alert when there is drift. So, besides retraining (
 
 ![Create Automation](images/PrefectAutomationCreate.png)
 
-2. First, we need the trigger (the event that causes the automation to start). We select **Custom** as the type, and write "drift.detected" as the matching event and "dataset.auc" as the resource. Configuration should look like following image.
+2. First, we need the trigger (the event that causes the automation to start). We select **Custom** as the type, and write "drift.detected" as the matching event and "dataset.auc" as the resource. This is the even name I've set in the project code. It may not appear listed in prefect cloud search as you type, but that is not a problem. Configuration should look like following image.
 
 ![Automation Trigger](images/PrefectAutomationTrigger.png)
 
-3. Next, as action we pick _Send a notification_. We can leave the default body. Now we click on the **Block** option to fill it.
+3. Next, as action we pick _Send a notification_. We can leave the default content. Now we click on the **Block** option to fill it.
 
 ![Automation Action](images/PrefectAutomationAction.png)
 
@@ -197,7 +197,7 @@ Here we are going to send an alert when there is drift. So, besides retraining (
 
 ### Firebase
 
-1. Sign-in into [Firebase Console](https://console.firebase.google.com/u/0/) and create a project with "Start with Firebase Project" option. (We don't need credit card information).
+1. Sign-in into [Firebase Console](https://console.firebase.google.com/u/0/) and create a project with "Start with Firebase Project" option. (We **don't** need credit card information).
 
 ![Firebase Account](images/FirebaseCreateProject.png)
 
@@ -229,25 +229,25 @@ To configure Storage, we select "All products" on the left side menu and pick th
 
 ![All products](images/FirebaseProducts.png)
 
-In the Storage configuration, we select development mode for the security rules, and the location that is most close to us if possible. Wait for the bucket to be created.
+In the Storage configuration, we select development mode for the security rules, and the geographic location that is most close to us if possible. Wait for the bucket to be created.
 
 ![Firebase Storage](images/FirebaseStorageBucket.png)
 
-We will now copy the bucket URL, it should look like "gs://project-name-id.appspot.com", we copy it without the "gs://" and without the ".appspot.com" parts. (This is our project unique identifier we will use later). So, copy the code "project-name-id" part and save in a text note for later.
+We will now copy the bucket URL, it should look like "gs://project-name-id.appspot.com", **we copy it without the "gs://" and without the ".appspot.com" parts**. (This is our project unique identifier we will use later). So, **copy the code "project-name-id" part and save in a text note for later**.
 
 #### Authentication (Firebase)
 
 Because users upload images to the cloud, we require authentication to connect to the service. End-users will be able to send images for the drift analysis and retraining when logged in.
 
-We can set multiple authentications (e.g., email, github, google, etc), but the project currently does not implement any.
+We can set multiple authentications methods (e.g., email, github, google, etc), but the project currently does not implement any.
 
 We start by going to the All products, like before, and select Authentication and start.
 
-We select the native provided "Anonymous" and enable it, so we don't force users to be logged in without any account, only logged as guests. (**![Privacy Warning](images/Warning.png) Note this is just for development purposes, as you would not want unidentified users uploading images**).
+We select the native provided "Anonymous" and enable it, so we don't force users to be logged in without any account, only logged as guests (anonymous authentication is not the same as no authentication). (**![Privacy Warning](images/Warning.png) Note this is just for development purposes, as you would not want unidentified users uploading images**).
 
 #### Firebase ML
 
-Finally, models are also deployed through Firebase, as it offers a way to store the tensorflow lite files (used by the flutter app).
+Finally, models are also deployed through Firebase, as it offers a way to store the tensorflow lite ML models (used by the flutter app).
 
 Again, we go to **All products**, and select **Machine Learning**. As we implement our own trained model, we are not using Google's Machine Learning services (only the storage). Therefore, we go to the Custom Tab.
 
@@ -257,9 +257,21 @@ There, we can manually manage our models. But the project already programmed the
 
 #### Admin download
 
-The access through the devices and from the dataset collection and model deployment services has been programmed. Nonetheless, we need access to the proper firebase credentials.
+The access through the devices and from the dataset collection and model deployment services has been programmed. Nonetheless, we need access to the proper firebase credentials for the data collection and modeling service.
 
-To do this, we
+On the Firebase Console upper left side, click on the settings wheel and go to project configuration:
+
+![Firebase Settings](images/FirebaseProjectSettings.png)
+
+Next we go to the "service accounts" tab, and like in the following image we click on the generate private keys.
+
+![Firebase Services](images/FirebaseAccountServices.png)
+
+Confirm creating the pair and this will download a file named like "firebase-project-f2109-firebase-adminsdk-68klm-bt5ge88216.json": We rename it only to "serviceAdmin.json" and move it to the project folder, where we moved the google-services.json file too.
+
+**![Privacy Warning](images/Warning.png) Don't share the file as it contains private info**.
+
+Congrats! The funny part of creating accounts is complete, now the nightmare of setting the project begins :(
 
 ## Project setting
 
