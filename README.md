@@ -140,8 +140,6 @@ All of the 3 services we are going to create an account with allow to use google
 
 From Roboflow we only require an API key so they allow us to download datasets from python code.
 
-I provided the API key of my account to save your time creating more accounts. But in case my key stops working you can create an account and set the key following these steps:
-
 1. Access [Robofow](https://app.roboflow.com/) and sign-in.
 2. Browse to the [Weld quality inspection Dataset](https://universe.roboflow.com/welding-2bplp/weld-quality-inspection-rei9l/dataset/9) we are going to use.
 3. In the upper right corner, click on **Download Dataset**, select _Pascal VOC_ format, _show download code_ option and click _Continue_.
@@ -276,10 +274,27 @@ Congrats! The funny part of creating accounts is complete, now the nightmare of 
 ## Project setting
 
 1. Clone this repo (`git clone ...`) if you haven't.
-2. `cd` to the project and call `make setup` to run the Makefile script that sets everyting up.
-3. `cd` to the client subfolder and call `firebase login --no-localhost` this requires you to login to your browser firebase account to complete configuration.
-4. run `firebase init` after succesfully login.
+2. Create a `.env` file in the project folder (where the README, and serviceAdmin.json files are).
+You should add the following variables in the `.env` with the keys you have saved from the cloud steps from before:
+```
+ROBOFLOW_API_KEY=<your copied key from previous steps>
+PREFECT_CLOUD_API_KEY=<your copied key from previous steps>
+FIREBASE_STORAGE_BUCKET=<your copied key from previous steps>
+```
 
+3. `cd` to the project and call `make setup` to run the Makefile script that sets everyting up. This process make take several minutes are we are configuring everything we need for development + flutter and python requirements.
+If it crashes or run multiple times the `make setup` it may break some dependencies. In case it fails, it is recommended to go through the individual steps to troubleshot. (In a clean installation of the OS should not give problems, so that's why it is advisable to try the project inside a container or WSL.
+
+The Makefile setup instruction runs several steps you can check by opening the file:
+* `dependencies_main`: Ensures python and pre-commit are installed in Linux, for development purposes.
+* `dependencies_client`: Ensures packages required by flutter and android development are installed.
+* `dependencies_flutter`: Installs flutter and android sdk.
+* `dependencies_firebase`: Installes the requirements for Firebase.
+* `client/configure`: Inside the client folder, its Makefile configures the flutter project.
+* `modeling/configure`: Inside modeling folder, its Makefile installs python requirements and configures firebase and prefect access.
+
+4. `cd` to the client subfolder and call `firebase login --no-localhost` this requires you to login to your browser firebase account to complete configuration.
+5. run `firebase init` after succesfully login. This will allow us to configure its requirements.
 
 Recommended to not override the provided rules.
 

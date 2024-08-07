@@ -14,11 +14,13 @@ ifneq (,$(wildcard ./.env))
 endif
 
 dependencies_main:
+	echo "INSTALLING PYTHON AND PRECOMMIT" && \
 	sudo apt update -y && sudo apt upgrade -y && \
 	sudo apt install python3 python3-venv python3-pip pre-commit -y && \
 	pre-commit install
 
 dependencies_client:
+	echo "INSTALLING FLUTTER+ANDROID REQUIREMENTS" && \
 	sudo apt install -y curl git unzip xz-utils zip libglu1-mesa && \
 	sudo apt install -y libc6:amd64 libstdc++6:amd64 libbz2-1.0:amd64 && \
 	sudo apt install -y lib32z1 libgtk-3-dev && \
@@ -26,6 +28,7 @@ dependencies_client:
 	sudo apt install -y clang cmake ninja-build pkg-config libgtk-3-dev
 
 dependencies_flutter:
+	echo "INSTALLING FLUTTER & ANDROID SDKs" && \
 	wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.3-stable.tar.xz && \
 	tar xf flutter_linux_3.22.3-stable.tar.xz && \
 	mv flutter $HOME/fluttersdk && \
@@ -42,6 +45,7 @@ dependencies_flutter:
 	flutter doctor
 
 dependencies_firebase:
+	echo "INSTALLING FIREBASE TOOLS" && \
 	sudo apt update && \
 	sudo apt purge nodejs && \
 	sudo apt purge npm && \
@@ -54,6 +58,7 @@ dependencies_firebase:
 	npm -v # should print `10.8.1`
 
 setup: dependencies_main dependencies_client dependencies_flutter dependencies_firebase
+	echo "SETUP DONE; CONFIGURING INDIVIDUAL PROJECTS"
 	cp .env $(PROJECT_SERVER)/.env && \
 	cp serviceAdmin.json $(PROJECT_SERVER)/private/serviceAdmin.json && \
 	$(MAKE) -C $(PROJECT_SERVER) configure && \

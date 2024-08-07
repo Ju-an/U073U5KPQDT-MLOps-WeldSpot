@@ -21,7 +21,8 @@ setup:
 
 configure:
 	# Firebase CLI
-	sudo npm install -g firebase-tools
-	dart pub global activate flutterfire_cli
-	dart --disable-analytics
+	echo "CONFIGURING FLUTTER PROJECT WITH FIREBASE" && \
+	sudo npm install -g firebase-tools && \
+	dart pub global activate flutterfire_cli && \
+	dart --disable-analytics && \
 	export PATH="$PATH":"$HOME/.pub-cache/bin:/mnt/c/Windows/system32"
