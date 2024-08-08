@@ -23,7 +23,7 @@ configure:
 	source .venv/bin/activate && \
 	python3 -m pip install -U pip && \
 	pip install -r requirements.txt && \
-	@echo "PREFECT_CLOUD_API_KEY=$$PREFECT_CLOUD_API_KEY" && \
+	echo "PREFECT_CLOUD_API_KEY=$$PREFECT_CLOUD_API_KEY" && \
 	prefect cloud login --key $$PREFECT_CLOUD_API_KEY
 
 quality:
