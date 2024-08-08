@@ -15,5 +15,27 @@
       "enabled": true
     },
     "singleProjectMode": true
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "weld-spot",
+          "appId": "1:965765116382:android:f3e867df8937d8854a6d4f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "weld-spot",
+          "configurations": {
+            "android": "1:965765116382:android:f3e867df8937d8854a6d4f",
+            "ios": "1:965765116382:ios:1102217fb09677ea4a6d4f",
+            "macos": "1:965765116382:ios:1102217fb09677ea4a6d4f",
+            "windows": "1:965765116382:web:5778d7e90c742a2d4a6d4f"
+          }
+        }
+      }
+    }
   }
 }

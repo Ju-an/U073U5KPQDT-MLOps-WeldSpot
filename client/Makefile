@@ -3,9 +3,6 @@ SHELL := /bin/bash
 PROJECT_PATH=$(shell pwd)
 PARENT_MAKEFILE=../Makefile
 
-export PATH="$(HOME)/fluttersdk/bin:$(PATH)"
-export NVM_DIR="$(HOME)/.nvm"
-
 # Load .env file variables
 ifneq (,$(wildcard ../.env))
     include .env
@@ -22,15 +19,30 @@ setup:
 configure:
 	# Firebase CLI
 	echo "CONFIGURING FLUTTER PROJECT WITH FIREBASE" && \
+	export PATH=$(HOME)/fluttersdk/bin:$$PATH && \
+	export PATH="$$PATH:$(HOME)/.pub-cache/bin:/mnt/c/Windows/system32" && \
 	sudo npm install -g firebase-tools && \
-	dart pub global activate flutterfire_cli && \
 	dart --disable-analytics && \
-	export PATH="$(PATH)":"$(HOME)/.pub-cache/bin:/mnt/c/Windows/system32"
+	dart pub global activate flutterfire_cli
 
 register:
 	firebase login --no-localhost && \
+	export PATH=$(HOME)/fluttersdk/bin:$$PATH && \
+	export PATH="$$PATH:$(HOME)/.pub-cache/bin:/mnt/c/Windows/system32" && \
 	flutterfire configure --project=$$FIREBASE_PROJECT_NAME && \
-	firebase init
+	firebase init && \
+	flutter clean && \
+	flutter pub get
+
+build_apk:
+	export PATH=$(HOME)/fluttersdk/bin:$$PATH && \
+	export PATH="$$PATH:$(HOME)/.pub-cache/bin:/mnt/c/Windows/system32" && \
+	flutter build apk --release --split-per-abi
+
+build_apk_debug:
+	export PATH=$(HOME)/fluttersdk/bin:$$PATH && \
+	export PATH="$$PATH:$(HOME)/.pub-cache/bin:/mnt/c/Windows/system32" && \
+	flutter build apk --debug
 
 emulate:
 	firebase emulators:start

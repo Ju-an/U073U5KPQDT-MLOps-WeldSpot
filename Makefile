@@ -53,13 +53,13 @@ dependencies_firebase:
 	echo "[WELDSPOT] INSTALLING FIREBASE TOOLS" && \
 	sudo apt update && \
 	sudo apt purge -y nodejs npm && \
-	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
-	export NVM_DIR="$(HOME)/.nvm" && \
-	[ -s "$$NVM_DIR/nvm.sh" ] && \. "$$NVM_DIR/nvm.sh" && \
-	[ -s "$$NVM_DIR/bash_completion" ] && \. "$$NVM_DIR/bash_completion" && \
-	nvm install 20 && \
-	node -v && \
-	npm -v
+	sudo apt remove --purge nodejs npm -y && \
+	sudo apt autoremove -y && \
+	sudo apt autoclean && \
+	sudo apt update && \
+	sudo apt install -y curl software-properties-common && \
+	curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
+	sudo apt update && sudo apt install nodejs -y
 
 setup: dependencies_main dependencies_client dependencies_flutter dependencies_firebase
 	echo "[WELDSPOT] SETUP DONE; CONFIGURING INDIVIDUAL PROJECTS"

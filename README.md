@@ -314,84 +314,57 @@ The Makefile `setup` instruction runs several steps, which you can check by open
 
 This main Makefile has also rules to call commands from the `modeling/Makefile` and `client/Makefile`, or alternatively you can `cd` to either folder and run their respective Makefile commands. For example, you can run `make model_unit_tests` from the main folder or `make unit_tests` from the modeling folder to run the python tests. You can find more by viewing the Makefiles.
 
-4. After running successfully the `make setup`, there is a final configuration step that requires user interaction. Run `make client_register`.
+4. After running successfully the `make setup`, there is a final configuration step that requires manual interaction. Run `make client_register`.
+    * When asked about _Allow Firebase to collect CLI and Emulator Suite usage and error reporting information? (Y/n)_: Type **N** and press Enter.
+    * When asked _To sign in to the Firebase CLI_: Follow its instructions, remember the session ID, visit the URL (in a browser where you are logged in with Firebase Console) and paste in the terminal the code returned. You may need to allow Firebase CLI permissions on your account.
+    * When you are presented with _Which platforms should your configuration support_: Ensure at least android has a tick (rest are optional, but the plugin for running the ML model only supports mobile, android and ios).
+    * When you're asked _Which Firebase features do you want to set up for this directory_: Use arrows and space to select the following:
+        * _Storage: Configure a security rules file for Cloud Storage_. So we can access the cloud storage we've set.
+        * _Emulators: Set up local emulators for Firebase products_. Optional, in case we want to develop further the app, so we can test locally.
+    * If prompted in _Project Setup_ to _associate this project directory with a Firebase project_. Select **Use an existing project** and select the one you created from the list.
+    * When asked _What file should be used for Storage Rules?_ use the default by pressing Enter without typing text.
+    * If asked _File storage.rules already exists. Overwrite?_ type **N** and press Enter.
+    * When asked about _Which Firebase emulators do you want to set up?_ Select Authentication and Storage and, optionally, accept downloading emulators now.
 
-Recommended to not override the provided rules.
+This process will create a `firebase_options.dart` file inside the `client/lib` folder. It contains the credentials that the `firebase_config.dart` will read to allow users to connect to the cloud to download the models and upload pictures.
 
-* Select the features to use: Storage, Emulators.
-* Create a new Firebase project to associate the flutter project.
-* If error "Cloud resource location is not set", use Firebase Web Interface to set Cloud Storage product: https://console.firebase.google.com/u/0/project/<name-of-project>/storage -> Start
-* Configure emulators with the default ports: Authentication and Storage (not Firestore) recommended.
+**Congratulations on finishing the hardest part**! You may want to take a break. Next steps will be building the projects and running everything.
 
+## Building
 
-Create configuration file.
-```ps
-flutterfire configure
-```
+The makefiles for `modeling` and `client` folders contain all the scripts for building the services and other utilities like tests and running the firebase emulators. You can check those files in detail, but here are the few instructions we will need.
 
-Activate firebase emulators
-```ps
-firebase emulators:start
-```
-Use the "Host:Port" (replace 127.0.0.1 with the IP of the machine running the emulator) for testing the app in your same network.
+###### Note: Remember the main `Makefile` at the main folder has prefixes `model_` and `client_` for calling the instructions inside each modeling and client folders. Following script mentions will not use those as they can be called from inside each. For example, instead of running `make model_unit_tests` from the parent project folder, we can `cd ./modeling` and call `make unit_tests`. Whatever is more comfortable.
 
-Use the "View in Emulator UI" URLs in web browser to manually manage the contents. If you open the "Storage" tab in the browser UI of the emulators (127.0.0.1:4000/storage), you can see default bucket URL like "gs://<firebase-project-name>.appspot.com".
+### Modeling service
 
-Modify file `lib/firebase_config.dart` and use the proper IP and ports on your network. If wanting to deploy to cloud, replace with network addresses provided by Google's Firebase Web Console.
+Here is a list of the available commands in the makefile and what they do:
 
-Inside the project there is also firebase.json -> Edit the emulators so they contain `"host": "0.0.0.0"` like this:
-```json
-{
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "emulators": {
-    "storage": {
-      "port": 9199,
-      "host": "0.0.0.0"
-    },
-    "ui": {
-      "enabled": true
-    },
-    "singleProjectMode": true
-  }
-}
-```
-Ensure your machine has the required ports open. Optionally, you could run on Android Emulator instead of a real device.
+* `make quality`: Runs quality checks on python code, including import shorting, linting and code formatting.
+* `make unit_tests`: Runs python unit tests with pytest.
+* `make build_image`: Creates the docker image from the modeling source code so we have it containerized.
+* `make export_image`: Exports the docker image to a file so we can deploy it to cloud
+* `make run_image`: Runs the image we have built in the local docker machine.
+* `make run_app`: Runs the modeling service locally, without containers. For testing purposes.
 
-Remember to remove firewall rules afterwards when not using project emulators.
+Note that the docker image is only for running the service part, not the client app neither the cloud services. Network and firewall rules should be properly configured in the system so the deployed container can communicate properly.
 
-### Configuring Android build
+### Client app
 
-* Go to Firebase Console.
-* Select Project.
-* Click on the House icon.
-* In the icons select the Android to add to app to start.
-* For Android package name use: `org.tensorflow.image_classification_mobilenet`
-* Register app.
-* Download `google-services.json` file.
-* Put the `google-services.json` file in `android/app` folder.
-* Skip Steps: Firebase Web Console configuration to enable Firebase SDK with Android (Groovy build.gradle); files are already configured.
-* Fill rest of `lib/firebase_config.dart` options according to the `google-services.json`:
-```md
-apiKey: From client > api_key > current_key.
-appId: From client > client_info > mobilesdk_app_id.
-messagingSenderId: From project_info > project_number.
-projectId: From project_info > project_id.
-storageBucket: From project_info > storage_bucket.
-```
-
-Rebuild flutter project:
-```ps
-flutter clean
-flutter pub get
-```
-
-Fill the values in `android/app/src/main/res/values/values.xml` with the data in `google-services.json` and the ID of your project (default_web_client_id).
+Here is the list of the available commands in the makefile and what they do:
 
 
+* `make build_apk`: Builds android installers from the project that can be installed on android devices. This creates multiple files in ` build/app/outputs/flutter-apk/`, pick the one for your android architecture (usually its armeabi-v7a) to install in your smartphone:
+  * app-arm64-v8a-release.apk
+  * app-armeabi-v7a-release.apk
+  * app-x86_64-release.apk
+* `make_build_apk_debug`: If you enabled developer mode in your android, you can use the apk generated by this instead.
+* `make emulate`: Launches the firebase services emulators. Optionally, in case you want to develop further the app.
 
-5. Create container image for not running locally with `
+![TODO]: Review welding-defects-models (and possibly delete xml values and set firebase_config.dart properly) `android/app/src/main/res/values/values.xml`
+https://firebase.google.com/docs/ml/android/use-custom-models?hl=es-419
+https://blog.tensorflow.org/2020/06/enhance-your-tensorflow-lite-deployment-with-firebase.html
+![TODO]: Explain tensorboard
 
 ## Running the service
 
@@ -406,30 +379,49 @@ They all depend on the code programmed inside the `service` folder, which you ca
 
 ### Orchestration
 
-This section details the Prefect flows created (orchestration pipelines of our services):
-
-* Data Collection, found in `collection_pipeline.py`.
-* Model Training, found in `training_pipeline.py`.
+This section details the Prefect flows created (orchestration pipelines of our services). You can take a look at the code and check the functions called as well.
 
 #### Data Collection
 
-
+Found in `collection_pipeline.py`, in charge of
 
 #### Model Training
 
-
+Found in `training_pipeline.py`, in charge of
 
 ##### Experiment Tracking:
 
 Because TensorFlow is used for training models, it offers TensorBoard, which allows to monitor and view graphics of training performance.
 
-Evidently, WhyLabs/whylogs, ...
-https://blog.tensorflow.org/2020/06/enhance-your-tensorflow-lite-deployment-with-firebase.html
-
-https://firebase.google.com/docs/ml/android/use-custom-models?hl=es-419
-https://blog.tensorflow.org/2020/06/enhance-your-tensorflow-lite-deployment-with-firebase.html
 
 
-# Final Comments
+# Conclusions
 
+The lectures were helpful to visualize each part individually, and have an introduction to each chapter.
+This project helped realize the full MLOps architecture and helped me learn how to interconnect each to build a complete solution.
 This was a very interesting activity to put to practice the skills from the MLOps course.
+
+As expected from any beginning, some challenges appeared that had to be overcome.
+Mostly, errors in developing and building the infrastructure required learning new things, dropping some requirements or finding other tools in order to solve the problems.
+Overall, it was a good experience to prove the concepts and gain new skills.
+
+## Future work
+
+Possible applications and improvements that could be made to this project (either to the MLOps cycle or the app features) include:
+
+* **MLOps**: Improve the models, app interface and orchestration.
+* **MLOps**: Automatize more processes.
+* **MLOps**: Improve the pipeline and offer better models.
+* **MLOps**: Add grouping for the uploaded images. For instance, the images from multiple users of the same company for training a model specificaly for them.
+* **MLOps**: Anonymize images (e.g., blur faces) and ensure data privacy (encryption and authentication).
+* **Features**: Automatic detection on production lines.
+* **Features**: Assists in expertise audits.
+* **Features**: Add detection boxes and segmentation capabilities (detect exact pixels instead of the bounding box).
+* **Features**: Proposing solutions or mitigations to bad weldings based on the defects found (could use more AI).
+* **Features**: Real-time Augmented Reality (AR) for welding professionals giving support or guiding them while they work.
+* **Features**: Support for more types of welding, defects, and related operations.
+* **Features**: Forecasting welding quality based on materials, history data and other relevant information.
+
+## Thanks
+
+Special thanks to Alexey Grigorev and the rest of the Zoomcamp team for helping on slack and offering the opportunity to do this course.

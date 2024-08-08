@@ -172,3 +172,5 @@ temp/
 modeling/private/
 serviceAdmin.json
 google-services.json
+firebase_options.dart
+client/android/app/google-services.json
