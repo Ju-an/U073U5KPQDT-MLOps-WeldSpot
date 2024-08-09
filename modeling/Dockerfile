@@ -9,7 +9,9 @@ WORKDIR /app
 COPY . /app
 
 # Setup depenencies
+RUN sudo apt update && sudo apt install make -y
 RUN apt update -y && apt install -y python3.12 python3-pip python3-venv & pip3 install -r requirements.txt && pip3 install -r requirements.txt
+RUN make configure
 
 # No ports exposed as it accesses Firebase Storage and pushes to the Modeling service.
 

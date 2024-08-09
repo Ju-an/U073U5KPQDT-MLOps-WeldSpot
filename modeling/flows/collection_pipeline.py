@@ -112,3 +112,15 @@ def periodic_monitoring_flow():
         return
     if drift is not None:
         emit_event(event="drift.detected", resource={"prefect.resource.id": "dataset.auc", "prefect.resource.name": drift})
+
+if __name__ == "__main__":
+    print("Testing dataset integration.")
+    download_files_initial()
+    preprocess_files()
+    augment_files(1)
+    split_files("temp")
+    # empty_folder("temp")
+    print("Cleaning up temporary dataset.\nTesting drift integration.")
+    download_files()
+    metrics, drift = drift_detection()
+    print(f"· Metrics: {metrics}\n· Drift: {drift}")

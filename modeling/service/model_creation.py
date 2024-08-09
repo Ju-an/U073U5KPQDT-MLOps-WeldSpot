@@ -24,7 +24,7 @@ def sequential_model():
     model.compile(optimizer='adam',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
-    
+
     return model
 
 def mobilenet_model():
@@ -38,7 +38,9 @@ def mobilenet_model():
     # Add new layers on top of the model
     x = model.output
     x = GlobalAveragePooling2D()(x)
-    predictions = Dense(len(CLASS_NAMES), activation='sigmoid')(x)
+    x = Dense(512, activation='relu', kernel_regularizer=l2(0.001))(x)
+    x = Dropout(0.5)(x)  # Dropout for regularization
+    predictions = Dense(len(CLASS_NAMES), activation='sigmoid', kernel_regularizer=l2(0.001))(x)
 
     # This is the model we will train
     model = Model(inputs=model.input, outputs=predictions)
@@ -47,14 +49,15 @@ def mobilenet_model():
 
     return model
 
-def load_model(path):
+def model_load(path):
     model = tf.keras.models.load_model(path)
+    model.compile(optimizer=Adam(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy', 'auc'])
     return model
 
-def save_model(model, path):
+def model_store(model, path):
     model.save(path)
 
-def convert_model(model, path):
+def model_convert(model, path):
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
     with open(path, 'wb') as f:

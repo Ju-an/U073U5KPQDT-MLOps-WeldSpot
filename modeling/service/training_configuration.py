@@ -18,10 +18,10 @@ def get_device():
     """
     return "/device:GPU:0" if len(tf.config.list_physical_devices('GPU')) > 0 else "/device:CPU:0"
 
-def get_split_generators(path):
-    train_path = f'{path}/train'
-    validation_path = f'{path}/valid'
-    test_path = f'{path}/test'
+def get_split_generators(root_path):
+    train_path = f'{root_path}/train'
+    validation_path = f'{root_path}/valid'
+    test_path = f'{root_path}/test'
     train_datagen = ImageDataGenerator(rescale=1./255)
     validation_datagen = ImageDataGenerator(rescale=1./255)
     test_datagen = ImageDataGenerator(rescale=1./255)
@@ -44,5 +44,5 @@ def get_split_generators(path):
         target_size=TARGET_SIZE,
         batch_size=TRAIN_BATCH_SIZE,
         class_mode='categorical')
-    
+
     return train_generator, validation_generator, test_generator

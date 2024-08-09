@@ -5,7 +5,7 @@ PARENT_MAKEFILE=../Makefile
 DOCKER_IMAGE_NAME=modeling_image
 
 # Load .env file variables
-ifneq (,$(wildcard ../.env))
+ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
@@ -23,8 +23,18 @@ configure:
 	source .venv/bin/activate && \
 	python3 -m pip install -U pip && \
 	pip install -r requirements.txt && \
-	echo "PREFECT_CLOUD_API_KEY=$$PREFECT_CLOUD_API_KEY" && \
-	prefect cloud login --key $$PREFECT_CLOUD_API_KEY
+	prefect cloud login --key $$PREFECT_CLOUD_API_KEY && \
+	mkdir -p logs/fit && \
+	mkdir -p logs/predict && \
+	mkdir -p data/ && \
+	mkdir -p data/raw/ && \
+	mkdir -p data/processed/ && \
+	mkdir -p data/augmented/ && \
+	mkdir -p data/initial/ && \
+	mkdir -p data/splits/ && \
+	mkdir -p models/ && \
+	mkdir -p models/best && \
+	mkdir -p models/deploy
 
 quality:
 	source .venv/bin/activate && \
@@ -38,7 +48,10 @@ unit_tests:
 
 integration_test:
 	source .venv/bin/activate && \
-	echo "Integration test not implemented for Dataset project"
+	echo "Testing dataset service" && \
+	PYTHONPATH=$(PROJECT_PATH) python flows/collection_pipeline.py && \
+	echo "Testing model service" && \
+	PYTHONPATH=$(PROJECT_PATH) python flows/training_pipeline.py
 
 build_image:
 	docker build -t $(DOCKER_IMAGE_NAME) .

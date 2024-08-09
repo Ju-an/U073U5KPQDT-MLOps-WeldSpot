@@ -97,6 +97,7 @@ modeling/
 |  ├──augmented/: Where augmented images are stored after the preprocess.
 |  ├──splits/: Where the final, splitted (train, valid, test) versions are stored for training.
 |  └──initial.zip: Background class initial data to use with roboflow dataset.
+├──logs/: Where TensorBoard tracking will be stored at.
 ├──models/: Where models are stored.
 |  ├──best:/ Last models kept for future retraining. Models saved in Keras format.
 |  └──deploy/: For models deployed to the cloud. Models saved in Tensorflow Lite format.
@@ -245,6 +246,9 @@ In the Storage configuration, we select development (test, not production) mode 
 
 We will now copy the bucket URL, it should look like "gs://project-name-id.appspot.com", **we copy it without the "gs://" and without the ".appspot.com" parts**. (This is our project unique identifier we will use later). So, **copy the code "project-name-id" part and save in a text note for later**.
 
+From this bucket, in case you cannot run the app, you can upload images directly to force retraining and test the drift logic.
+More on this topic in the [orchestration section](#Orchestration).
+
 #### Authentication (Firebase)
 
 Because users upload images to the cloud, we require authentication to connect to the service. End-users will be able to send images for the drift analysis and retraining when logged in.
@@ -342,17 +346,17 @@ Here is a list of the available commands in the makefile and what they do:
 
 * `make quality`: Runs quality checks on python code, including import shorting, linting and code formatting.
 * `make unit_tests`: Runs python unit tests with pytest.
+* `make integration_test`: Test the services to ensure they work correctly.
 * `make build_image`: Creates the docker image from the modeling source code so we have it containerized.
 * `make export_image`: Exports the docker image to a file so we can deploy it to cloud
 * `make run_image`: Runs the image we have built in the local docker machine.
 * `make run_app`: Runs the modeling service locally, without containers. For testing purposes.
 
-Note that the docker image is only for running the service part, not the client app neither the cloud services. Network and firewall rules should be properly configured in the system so the deployed container can communicate properly.
+Note that the docker image is only for running the service part, not the client app neither the cloud services (you can check the Dockerfile). Network and firewall rules should be properly configured in the system (e.g., localstack endpoint) so the deployed container can communicate properly.
 
 ### Client app
 
 Here is the list of the available commands in the makefile and what they do:
-
 
 * `make build_apk`: Builds android installers from the project that can be installed on android devices. This creates multiple files in ` build/app/outputs/flutter-apk/`, pick the one for your android architecture (usually its armeabi-v7a) to install in your smartphone:
   * app-arm64-v8a-release.apk
@@ -383,7 +387,23 @@ This section details the Prefect flows created (orchestration pipelines of our s
 
 #### Data Collection
 
-Found in `collection_pipeline.py`, in charge of
+Found in `collection_pipeline.py`, in charge of preparing the datased based of the initial source, and images provided continously by the users.
+
+The initial run will download the Roboflow dataset. Additionally it has a flow programmed to every week download new images from Firebase and analyze them to detect drift.
+
+The metric to monitor that I set is AUC. AUC (Area Under the Curve) is a metric to measure how well a model can distinguish between different classes.
+
+When drift is detected
+
+##### Forcing retraining
+
+The client app uploads the images named as an ID, and the corrected classes by the users with the model detection chance.
+For example `A0Z_1-0.9_0-0.1_0-0.2_0-0.3_0-0.4_0-0.5_0-0.6` means "A0Z" ID (to avoid duplicates), and each pair of numbers (X-Y.Z) belongs to each weld defect class in order, and mean the following:
+  * X = Boolean, 1 = The class exists, 0 = no. Indicated by the users (we currently consider it as truth). For example, the "1-0.9", it means the user indicates background image (no weld), and the next "0-0.1" means the user indicates no "Bad Welding" class.
+  * Y.Z = The chance (float, 0 = 0% of the class existing, and 1 = 100% of confidence) of being a class, as predicted by the ML model. For example, in "1-0.9", the prediction is saying 90% of confidence of being a background image, and the user indicates it is. In "0-0.6" the model predicts a 60% confidence of "Splatters" but the image is indicated by the user as not containing any.
+
+So, we can upload a random image with the name "xd_1-0.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0.jpg" to the bucket manually, or use the flutter app to contradict a prediction. The flow is set to run every week to give time to gather enough images, but current project will base the entire performance with even a single image. So, passing that image will say the model is 100% wrong and requires retraining (although with this single image).
+I recommend creating a few, so the system can split them (currently for each image, it generates 8 additional augmented versions, see `options.py` for more info). If no new images are available, the flow will stop.
 
 #### Model Training
 
@@ -391,9 +411,17 @@ Found in `training_pipeline.py`, in charge of
 
 ##### Experiment Tracking:
 
+For experiment tracking, we've seen MLFlow in the course. Because I already had experience with TensorBoard, the project uses TensorFlow, and TensorFlow has insights for models image models (e.g., CNN), I've decided to use TensorBoard.
+
 Because TensorFlow is used for training models, it offers TensorBoard, which allows to monitor and view graphics of training performance.
 
+### TensorBoard
 
+At this point, you managed to build and run the docker service (recommended) or locally (`make model_run_app`). Besides launching the prefect orchestration, it also runs tensorboard (by default on port 6006), so we can access it connecting to the machine URL on port (e.g., http://127.0.0.1:6006/).
+
+![TensorBoard training](images/TensorBoardTrain.png)
+
+### Flutter app usage
 
 # Conclusions
 
@@ -402,7 +430,7 @@ This project helped realize the full MLOps architecture and helped me learn how 
 This was a very interesting activity to put to practice the skills from the MLOps course.
 
 As expected from any beginning, some challenges appeared that had to be overcome.
-Mostly, errors in developing and building the infrastructure required learning new things, dropping some requirements or finding other tools in order to solve the problems.
+Mostly, errors in developing and building the infrastructure required learning new things, dropping some requirements or finding other tools in order to workaround the problems.
 Overall, it was a good experience to prove the concepts and gain new skills.
 
 ## Future work
@@ -410,7 +438,9 @@ Overall, it was a good experience to prove the concepts and gain new skills.
 Possible applications and improvements that could be made to this project (either to the MLOps cycle or the app features) include:
 
 * **MLOps**: Improve the models, app interface and orchestration.
+* **MLOps**: Organize better the code.
 * **MLOps**: Automatize more processes.
+* **MLOps**: Monitor more stuff.
 * **MLOps**: Improve the pipeline and offer better models.
 * **MLOps**: Add grouping for the uploaded images. For instance, the images from multiple users of the same company for training a model specificaly for them.
 * **MLOps**: Anonymize images (e.g., blur faces) and ensure data privacy (encryption and authentication).
