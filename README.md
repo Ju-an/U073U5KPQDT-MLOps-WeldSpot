@@ -123,7 +123,7 @@ Because I am using a Windows machine, I installed [Docker Desktop](https://www.d
 
 Instructions on how to generate the docker image are provided in the [Installation](#Installation) section.
 
-Additionally, if using WSL, for allowing NVIDIA GPU in model training, the Windows machine should have updated [NVIDIA Drivers](https://www.nvidia.com/Download/index.aspx) installed. This is optional if no NVIDIA GPU is available, but will increase the training speed. Installation scripts (e.g., Makefile) already automate most of the installation required, you only need to ensure latest NVIDIA drivers in case. If you run `nvidia-smi` command on terminal and see your GPU available, you're good to go.
+Additionally, if using WSL, for allowing NVIDIA GPU in model training, the Windows machine should have updated [NVIDIA Drivers](https://www.nvidia.com/Download/index.aspx) installed. This is optional if no NVIDIA GPU is available, but will increase the training speed. Installation scripts (e.g., Makefile) already automate most of the installation required, you only need to ensure latest NVIDIA drivers in case. If you run `nvidia-smi` command on terminal and see your GPU available, it means you can run tensorflow with GPU, if it gives error tensorflow (for training the models) will run with the CPU.
 
 ## Client
 I adapted an app based in an [example of TFLite plugin for flutter](https://github.com/tensorflow/flutter-tflite/tree/main/example/image_classification_mobilenet).
@@ -364,7 +364,7 @@ Here is the list of the available commands in the makefile and what they do:
 ![TODO]: Review welding-defects-models (and possibly delete xml values and set firebase_config.dart properly) `android/app/src/main/res/values/values.xml`
 https://firebase.google.com/docs/ml/android/use-custom-models?hl=es-419
 https://blog.tensorflow.org/2020/06/enhance-your-tensorflow-lite-deployment-with-firebase.html
-![TODO]: Explain tensorboard
+![TODO]: Explain tensorboard: Monitoring section; We can also show the monitoring of prefect cloud and the firebase storage usage
 
 ## Running the service
 
