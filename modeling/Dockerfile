@@ -35,4 +35,4 @@ RUN /bin/bash -c "source /modeling/.venv/bin/activate && pip install -r /modelin
 EXPOSE 6006
 
 # Run app.py when the container launches
-CMD ["/modeling/.venv/bin/python", "modeling/app.py"]
+CMD ["/modeling/.venv/bin/python", "/modeling/app.py"]

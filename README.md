@@ -348,7 +348,7 @@ Here is a list of the available commands in the makefile and what they do:
 * `make unit_tests`: Runs python unit tests with pytest.
 * `make integration_test`: Test the services locally to ensure they work correctly.
 * `make build_image`: Creates the docker image from the modeling source code so we have it containerized.
-* `make export_image`: Exports the docker image to a file so we can deploy it to cloud
+* `make export_image`: Exports the docker image to a file (modeling_image.tar) so we can deploy it to cloud.
 * `make run_image`: Runs the image we have built in the local docker machine.
 * `make run_app`: Runs the modeling service locally, without containers. For testing purposes.
 
@@ -402,7 +402,7 @@ The metric to monitor that I set is AUC. AUC (Area Under the Curve) is a metric 
 
 When drift is detected (the AUC goes below the threshold configured in options) it will generate the split with the new data so that the training service finds and retrains last model with them.
 
-We can manually start the periodic flow of data collection by running ...
+We can manually start the periodic flow of data collection by running `make list_flows`
 
 ##### Forcing retraining
 

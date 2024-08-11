@@ -65,10 +65,10 @@ build_image:
 	sudo docker build -t $(DOCKER_IMAGE_NAME) .
 
 export_image: build_image
-	docker save -o $(DOCKER_IMAGE_NAME).tar $(DOCKER_IMAGE_NAME)
+	sudo docker save -o $(DOCKER_IMAGE_NAME).tar $(DOCKER_IMAGE_NAME)
 
 run_image: build_image
-	docker run -it $(DOCKER_IMAGE_NAME)
+	sudo docker run -it $(DOCKER_IMAGE_NAME)
 
 run_app:
 	source .venv/bin/activate && \

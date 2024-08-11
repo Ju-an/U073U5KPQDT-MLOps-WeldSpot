@@ -39,7 +39,8 @@ def divide_image_labels(image_path):
     """
     file_name = os.path.basename(image_path)
     division = file_name.split("_")
-    return division[0], [d.split(".")[0] if "." in d else d for d in division[1:]]
+    labels = [d.split(".")[0] if "." in d else d for d in division[1:]]
+    return division[0], labels
 
 
 def divide_class_names(labels):
@@ -137,6 +138,7 @@ def group_images_by_class(files, tmp):
     """
     for file_name in files:
         _, labels = divide_image_labels(file_name)
+        labels = [l.split("-")[0] if "-" in l else l for l in labels]
         classes = divide_class_names(labels)
         for name in classes:
             class_dir = os.path.join(tmp, name)

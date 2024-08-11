@@ -11,7 +11,7 @@ def main():
     print(FIREBASE_SDK_ADMIN_FILE_PATH, FIREBASE_STORAGE_BUCKET_NAME)
     print(storage)
     print("Launching TensorBoard service")
-    subprocess.run(["tensorboard", "--logdir=logs/fit --port=6006"], check=True)
+    subprocess.Popen(["tensorboard", "--logdir=logs/fit/", "--port=6006"])
     print("Starting Collection and Modeling service.")
     register_flows()
 
