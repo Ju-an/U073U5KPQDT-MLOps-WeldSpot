@@ -48,36 +48,25 @@ class ImageClassificationHelper {
       options.addDelegate(XNNPackDelegate());
     }
 
-    // Use GPU Delegate
-    // doesn't work on emulator
-    // if (Platform.isAndroid) {
-    //   options.addDelegate(GpuDelegateV2());
-    // }
-
     // Use Metal Delegate
     if (Platform.isIOS) {
       options.addDelegate(GpuDelegate());
     }
 
+    final modelUpdater = ModelUpdater();
+
     if (isDownloadModelAvailable) {
-      //WELD SPOT: Initialize Firebase and check for model updates
       try {
-        final modelUpdater = ModelUpdater();
         await modelUpdater.checkAndUpdateModel();
-        final localModelFile = await modelUpdater.getLocalModelFile();
-        log('Stored model file: $localModelFile');
-        interpreter = Interpreter.fromFile(localModelFile, options: options);
         log("Model loaded from Firebase");
       } catch (e) {
-        isDownloadModelAvailable = false;
-        log('Error accessing Firebase model: $e');
+        log('Error loading model from Firebase: $e');
       }
     }
-    if (!isDownloadModelAvailable) {
-      // Load model from assets
-      interpreter = await Interpreter.fromAsset(modelPath, options: options);
-      log('Local model loaded.');
-    }
+
+    final modelFile = await modelUpdater.getModelFile();
+    interpreter = Interpreter.fromFile(modelFile, options: options);
+    log('Model loaded from ${modelFile.path}');
 
     // Get tensor input shape [1, 224, 224, 3]
     inputTensor = interpreter.getInputTensors().first;
@@ -94,8 +83,8 @@ class ImageClassificationHelper {
   }
 
   Future<void> initHelper() async {
-    _loadLabels();
-    _loadModel();
+    await _loadLabels();
+    await _loadModel();
     isolateInference = IsolateInference();
     await isolateInference.start();
   }

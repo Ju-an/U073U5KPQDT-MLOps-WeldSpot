@@ -358,7 +358,7 @@ Note that the docker image is only for running the service part, not the client 
 
 Here is the list of the available commands in the makefile and what they do:
 
-* `make build_apk`: Builds android installers from the project that can be installed on android devices. This creates multiple files in ` build/app/outputs/flutter-apk/`, pick the one for your android architecture (usually its armeabi-v7a) to install in your smartphone:
+* `make build_apk`: Builds android installers from the project that can be installed on android devices. This creates multiple files in `client/build/app/outputs/flutter-apk/`, pick the one for your android architecture (usually its armeabi-v7a) to install in your smartphone:
   * app-arm64-v8a-release.apk
   * app-armeabi-v7a-release.apk
   * app-x86_64-release.apk
@@ -366,6 +366,8 @@ Here is the list of the available commands in the makefile and what they do:
 * `make emulate`: Launches the firebase services emulators. Optionally, in case you want to develop further the app.
 
 ## Running the service
+
+You can use the `make model_run_app` (locally) or start the docker image we've built.
 
 Besides the `.env` file you've set. You can check the `options.py` of the `modeling` service for configuration like how the images are passed for training.
 For example, you can change the batches and epochs trained to ensure the CPU/GPU can load them.
@@ -380,45 +382,85 @@ They all depend on the code programmed inside the `service` folder, which you ca
 
 This section details the Prefect flows created (orchestration pipelines of our services). You can take a look at the code and check the functions called as well.
 
+The pipelines are currently configured to run every day at fixed time. Although we would turn that to weekly so there is enough time to gather more images.
+You can change this in the `register_flows.py` so they run sooner and you can check how they do, or you can manually force them to start.
+
 #### Data Collection
 
 Found in `collection_pipeline.py`, in charge of preparing the datased based of the initial source, and images provided continously by the users.
 
 The initial run will download the Roboflow dataset. Additionally it has a flow programmed to every week download new images from Firebase and analyze them to detect drift.
 
+![Initial flow](images/PrefectInitialCollection.png)
+
 The metric to monitor that I set is AUC. AUC (Area Under the Curve) is a metric to measure how well a model can distinguish between different classes.
 
-When drift is detected
+![Periodic flow](images/PrefectPeriodicCollection.png)
+
+When drift is detected (the AUC goes bellow the threshold configured in options) it will generate the split with the new data so that the training service finds and retrains last model with them.
 
 ##### Forcing retraining
 
-The client app uploads the images named as an ID, and the corrected classes by the users with the model detection chance.
-For example `A0Z_1-0.9_0-0.1_0-0.2_0-0.3_0-0.4_0-0.5_0-0.6` means "A0Z" ID (to avoid duplicates), and each pair of numbers (X-Y.Z) belongs to each weld defect class in order, and mean the following:
+The client app uploads the images named as an ID, and the corrected classes by the users with the model detection chance for each class.
+In our case, the predicted classes can be: [Background, Bad Welding, Crack, Excess Reinforcement, Good Welding, Porosity, Splatters] in that order, with indexes from 0 to 6 of the model output.
+The Mobilenet model employed outputs 7 values, with each being its confidence of every class, so [0.9, 0.5...] would mean 90% it is Background, 50% it is Bad Welding...
+Then, in the flutter app, the user can decide if the predictions are correct or correct them (indicating which classes the picture contains).
+This results (predictions and corrections) are stored in the file name and sent to firebase for the service to analyze the drift an retrain.
+
+For example `A0Z_1-0.9_0-0.1_0-0.2_0-0.3_0-0.4_0-0.5_0-0.6` means "A0Z" ID (just a random name to avoid duplicates), and each pair of numbers (X-Y.Z) belongs to each weld defect class in order, and mean the following:
   * X = Boolean, 1 = The class exists, 0 = no. Indicated by the users (we currently consider it as truth). For example, the "1-0.9", it means the user indicates background image (no weld), and the next "0-0.1" means the user indicates no "Bad Welding" class.
   * Y.Z = The chance (float, 0 = 0% of the class existing, and 1 = 100% of confidence) of being a class, as predicted by the ML model. For example, in "1-0.9", the prediction is saying 90% of confidence of being a background image, and the user indicates it is. In "0-0.6" the model predicts a 60% confidence of "Splatters" but the image is indicated by the user as not containing any.
 
-So, we can upload a random image with the name "xd_1-0.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0.jpg" to the bucket manually, or use the flutter app to contradict a prediction. The flow is set to run every week to give time to gather enough images, but current project will base the entire performance with even a single image. So, passing that image will say the model is 100% wrong and requires retraining (although with this single image).
-I recommend creating a few, so the system can split them (currently for each image, it generates 8 additional augmented versions, see `options.py` for more info). If no new images are available, the flow will stop.
+So, we can upload a random image with the name "xd_1-0.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0.jpg" to the bucket manually, or use the flutter app to contradict a prediction. So, passing that image will say the model is 100% wrong and requires retraining (although more images in a real scenario would be advised to fight bias).
+I recommend creating a few, so the system can split them (currently for each image, it generates 8 additional augmented versions, see `options.py` for more info). If no new images are available, the flow will not continue.
 
 #### Model Training
 
-Found in `training_pipeline.py`, in charge of
+Found in `training_pipeline.py`, in charge of training a new model (not automatic, needs manual trigger but I already ran it and provided the starting weld_0 model) and retraining when there are drifts.
+
+![Train flow](images/PrefectTrain.png)
+
+The retraining is scheduled in `register_flows.py` after the data collection, so when new split with drift is detected it retrains the latest model.
+Model is stored in the orchestrated container (`models/best` folder) with suffixes for every subsequent version.
+
+![Retrain flow](images/PrefectRerain.png)
+
+After training the model, it is evaluated with both a test split generated from that last new (drifted) data collected, and the initial test split.
+
+If the new model AUC is suficient, it will also be uploaded to the Firebase ML storage so that the client apps download that new version.
+
+Again, model training can be configure in the `options.py`. Additionally, we can also monitorits performance.
 
 ##### Experiment Tracking:
 
-For experiment tracking, we've seen MLFlow in the course. Because I already had experience with TensorBoard, the project uses TensorFlow, and TensorFlow has insights for models image models (e.g., CNN), I've decided to use TensorBoard.
-
-Because TensorFlow is used for training models, it offers TensorBoard, which allows to monitor and view graphics of training performance.
-
-### TensorBoard
+For experiment tracking, we've seen MLFlow in the course. Because I already had experience with TensorBoard, the project uses TensorFlow, and TensorFlow has insights for image models (e.g., CNN), I've decided to use TensorBoard.
+Tensorflow offers TensorBoard to monitor and view graphics of training performance. The data it generates is stored in the `logs/fit` folder most like MLFlow stores its runs, so that they can be viewed from a browser.
 
 At this point, you managed to build and run the docker service (recommended) or locally (`make model_run_app`). Besides launching the prefect orchestration, it also runs tensorboard (by default on port 6006), so we can access it connecting to the machine URL on port (e.g., http://127.0.0.1:6006/).
 
 ![TensorBoard training](images/TensorBoardTrain.png)
 
+This is an example of our initial training of the "weld_0" model after a few epochs. The runs are stored in subfolders with dates as names, so in the Tensorboard browser UI we can find them and check how well they trained.
+This way, combined with the prefect flows telling us if the moel was deployed or not, we can check how was the training and decide to retrain, change parameters or manually deploy a model.
+
 ### Flutter app usage
 
+After building the app, and installing it (your device may trigger some warning dialog about installing app outside from android app store or about analyzing the app for security) in your device, you can find the app named "image_classification_mobilenet". The app presents you with a the view of your phone camera (accepting permissions may be required).
+
+![Main flutter view](images/FlutterMain.png)
+
+The view will show us a panel below with the most probable classes predicted in the image in real-time. It also shows the time frequency of predictions (e.g., FPS, how long it took to pass the image through the model). Performance of predictions may vary depending on smartphone power.
+
+The user can press the thumbs up button to send feedback to the server that it worked as expected. Or press thumbs down button to trigger the correction screen.
+
+![Flutter feedback](images/FlutterFeedback.png)
+
+Here the user can manually tell which classes are showing and which now by checking the boxes. Then the image will be sent to Firebase storage with those corrections.
+
 # Conclusions
+
+With all of this, the project has been described. The script files can be checked for exploring how everything is programmed, but the main organization of the MLOps has been explained.
+New concept have also been introduced, more specifically the clouds and technologies employed. So, I hope it all was clear to understand and very beneficial.
 
 The lectures were helpful to visualize each part individually, and have an introduction to each chapter.
 This project helped realize the full MLOps architecture and helped me learn how to interconnect each to build a complete solution.

@@ -20,6 +20,7 @@ dependencies:
   image_picker: ^0.8.8
   tflite_flutter: ^0.10.4
   connectivity: ^3.0.6
+  firebase_ml_model_downloader: ^0.3.0+4
 
 dev_dependencies:
   flutter_test:

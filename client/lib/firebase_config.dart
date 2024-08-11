@@ -5,7 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 class FirebaseStorageConfig {
   // FILL FOLLOWING OPTIONS WITH YOURS:
-  static sont bool useEmulator = false; // Set to false for production, true for development
+  static const bool useEmulator = false; // Set to false for production, true for development
   static const String hostAddressEmulator = '192.168.1.102'; // Set to the IP of your machine that has the Storage emulator running
   static const int portNumberEmulator = 9199; // Change with the proper emulator port
   FirebaseStorageConfig._privateConstructor();
@@ -28,9 +28,11 @@ class FirebaseStorageConfig {
             options: DefaultFirebaseOptions.currentPlatform);
       }
       log("Firebase initialized");
-      const fsi = FirebaseStorage.instanceFor(bucket: bucketName)
+      final storageBucket = DefaultFirebaseOptions.currentPlatform.storageBucket;
+      final bucketName = storageBucket?.substring(0, storageBucket.indexOf('.appspot.com')) ?? '';
+      final fsi = FirebaseStorage.instanceFor(bucket: bucketName);
       if(useEmulator) { //"gs://$bucketName"
-        fsi.useStorageEmulator(hostAddressEmulator, portNumber);
+        fsi.useStorageEmulator(hostAddressEmulator, portNumberEmulator);
       }
       log("Firebase Storage emulator configured");
       _isConfigured = true;

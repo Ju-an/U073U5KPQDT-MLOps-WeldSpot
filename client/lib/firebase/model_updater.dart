@@ -1,18 +1,17 @@
 import 'dart:developer';
-
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_classification_mobilenet/firebase_config.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
-class ModelUpdater {
-  final String modelStoragePath = 'models/';
-  final String modelVersionKey = 'model_version';
-  final String localModelName = 'mobilenet_quant.tflite';
+import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
+import 'package:path_provider/path_provider.dart';
 
-  Future<File> getLocalModelFile() async {
+class ModelUpdater {
+  final String modelName = 'weld';
+  final String includedModel = "assets/models/weld_0.tflite";
+  final String modelVersionKey = 'model_version';
+
+  Future<File> getLocalModelFile(String version) async {
     final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/$localModelName');
+    return File('${directory.path}/${modelName}_$version.tflite');
   }
 
   Future<String> getLocalModelVersion() async {
@@ -28,34 +27,22 @@ class ModelUpdater {
     return '0'; // Default version if not found
   }
 
-  Future<String> getLatestRemoteModelVersion(FirebaseStorage storage) async {
+  Future<void> downloadModel(String version) async {
     try {
-      final ListResult result = await storage.ref(modelStoragePath).listAll();
-      int latestVersion = 0;
-      for (var item in result.items) {
-        final String name = item.name;
-        final RegExp versionRegex = RegExp(r'_v(\d+)\.tflite$');
-        final Match? match = versionRegex.firstMatch(name);
-        if (match != null) {
-          final int version = int.parse(match.group(1)!);
-          if (version > latestVersion) {
-            latestVersion = version;
-          }
-        }
-      }
-      return latestVersion.toString();
-    } catch (e) {
-      log('Error fetching remote model version: $e');
-    }
-    return '0'; // Default version if not found
-  }
+      final customModel = await FirebaseModelDownloader.instance.getModel(
+        '${modelName}_$version',
+        FirebaseModelDownloadType.latestModel,
+        FirebaseModelDownloadConditions(
+          iosAllowsCellularAccess: true,
+          iosAllowsBackgroundDownloading: false,
+          androidChargingRequired: false,
+          androidWifiRequired: false,
+          androidDeviceIdleRequired: false,
+        ),
+      );
 
-  Future<void> downloadModel(FirebaseStorage storage, String version) async {
-    try {
-      final storageRef =
-          storage.ref().child('$modelStoragePath/model_v$version.tflite');
-      final localModelFile = await getLocalModelFile();
-      await storageRef.writeToFile(localModelFile);
+      final localModelFile = await getLocalModelFile(version);
+      await customModel.file.copy(localModelFile.path);
       log('Model downloaded successfully');
     } catch (e) {
       log('Error downloading model: $e');
@@ -70,26 +57,38 @@ class ModelUpdater {
 
   Future<void> checkAndUpdateModel() async {
     try {
-      log('Checking for new models...');
-      final storage =
-          FirebaseStorage.instanceFor(bucket: FirebaseStorageConfig.bucketName);
-      final localVersion = await getLocalModelVersion();
-      final remoteVersion = await getLatestRemoteModelVersion(storage);
+      log('Checking for new models...');// TODO: Use firestore to keep track.
+      final models = ["weld_0", "weld_1", "weld_2", "weld_3", "weld_4", "weld_5"];
+      String latestVersion = '0';
 
-      if (localVersion != remoteVersion) {
-        await downloadModel(storage, remoteVersion);
-        await saveModelVersion(remoteVersion);
+      for (var model in models) {
+        final modelName = model;
+        if (modelName.startsWith(this.modelName)) {
+          final version = modelName.split('_').last;
+          if (int.tryParse(version) != null && int.parse(version) > int.parse(latestVersion)) {
+            latestVersion = version;
+          }
+        }
       }
 
-      // Verify the model file exists
-      final localModelFile = await getLocalModelFile();
-      if (await localModelFile.exists()) {
-        log('Model file exists at ${localModelFile.path}');
-      } else {
-        log('Model file does not exist at ${localModelFile.path}');
+      final localVersion = await getLocalModelVersion();
+      if (int.parse(latestVersion) > int.parse(localVersion)) {
+        await downloadModel(latestVersion);
+        await saveModelVersion(latestVersion);
       }
     } catch (e) {
       log('Error checking for model update: $e');
+    }
+  }
+
+  Future<File> getModelFile() async {
+    final localVersion = await getLocalModelVersion();
+    final localModelFile = await getLocalModelFile(localVersion);
+
+    if (await localModelFile.exists()) {
+      return localModelFile;
+    } else {
+      return File(includedModel);
     }
   }
 }
