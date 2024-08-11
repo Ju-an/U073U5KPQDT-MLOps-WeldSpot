@@ -6,7 +6,7 @@ import csv
 import shutil
 import roboflow
 import firebase_admin
-from firebase_admin import credentials, storage
+from firebase_admin import credentials, storage, ml
 
 from options import ROBOFLOW_API_KEY, FIREBASE_SDK_ADMIN_FILE_PATH, FIREBASE_STORAGE_BUCKET_NAME, SPLIT_NAMES, RAW_PATH, TEMP_PATH
 
@@ -102,7 +102,7 @@ def download_firebase(path = RAW_PATH):
     blobs = [blob for blob in blobs if blob.name.endswith(".jpg")]
     path = "data/raw"
     os.makedirs(path, exist_ok=True)
-    
+
     for blob in blobs:
         file_path = os.path.join(path, blob.name)
         blob.download_to_filename(file_path)
@@ -110,3 +110,15 @@ def download_firebase(path = RAW_PATH):
         count += 1
 
     return count
+
+def upload_tflite(model_path, model_tags):
+    bucket = init_firebase_storage()
+    model_name = os.path.splitext(os.path.basename(model_path))[0]
+    source = ml.TFLiteGCSModelSource.from_tflite_model_file(model_path)
+    tflite_format = ml.TFLiteFormat(model_source=source)
+    model = ml.Model(
+        display_name=model_name,
+        tags=model_tags,
+        model_format=tflite_format)
+    new_model = ml.create_model(model)
+    ml.publish_model(new_model.model_id)

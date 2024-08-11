@@ -17,6 +17,7 @@ ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY")
 TRAIN_BATCH_SIZE = os.environ.get("BATCH_SIZE", 16) # Load from .env file or use default value 32. Batch size = the number of images passed together to the train step (higher = faster but more memory)
 TRAIN_EPOCHS = os.environ.get("EPOCHS", 10) # Load from .env file or use default value 10. More epochs = more training (better but slower)
 
+TRAINING_VERBOSITY = 1 # Verbosity of the training process. 0 = silent, 1 = single progress bar, 2 = one progress per epoch (most detailed)
 CLASS_THRESHOLD = 0.6 # Threshold for considering an image as a class. For example, in inference, 0.6 (60%) chance of being a class or above to consider it.
 AUC_THRESHOLD = 0.75 # Threshold for detecting drift in AUC. If evaluation AUC is below this value, drift is detected and retrain is required. AUC (Area Under the Curve) is a metric.
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import tensorflow as tf
 import numpy as np
-from options import CLASS_NAMES, TRAIN_EPOCHS
+from options import CLASS_NAMES, TRAIN_EPOCHS, TRAINING_VERBOSITY
 from service.training_configuration import get_device
 
 def model_training(model, train_data, validation_data, epochs=TRAIN_EPOCHS):
@@ -27,16 +27,22 @@ def model_training(model, train_data, validation_data, epochs=TRAIN_EPOCHS):
             train_data,
             epochs=epochs,
             validation_data=validation_data,
-            callbacks=[early_stopping, tensorboard_tracking]
+            callbacks=[early_stopping, tensorboard_tracking],
+            verbose = TRAINING_VERBOSITY
         )
         return training
 
-def measure_performance(model, test_data):
-    log_dir = os.path.join("logs", "predict", datetime.now().strftime("%Y%m%d-%H%M%S"))
+def measure_performance(model, test_data, type="test"):
+    log_dir = os.path.join("logs", "predict")
+    os.makedirs(log_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    filename = f"{type}_{timestamp}.png"
+    file_path = os.path.join(log_dir, filename)
+
     file_writer = tf.summary.create_file_writer(log_dir)
     test_loss, test_acc, test_auc = model.evaluate(test_data)
     print(f'Test accuracy: {test_acc}, Test AUC: {test_auc}, Test loss: {test_loss}')
-    # TODO: Use tensorboard to visualize the training, validation, test and evaluation performance metrics
+
     predictions = model.predict(test_data)
     y_pred = [CLASS_NAMES[prediction.argmax()] for prediction in predictions]
     y_pred_indices = [CLASS_NAMES.index(pred) for pred in y_pred]
@@ -44,9 +50,28 @@ def measure_performance(model, test_data):
     conf_matrix = tf.math.confusion_matrix(y_true, y_pred_indices).numpy()
     # Log confusion matrix as an image
     figure = plot_confusion_matrix(conf_matrix, class_names=CLASS_NAMES)
-    cm_image = plot_to_image(figure)
+    plot_to_image(figure, file_path)
+    cm_image = tf.image.decode_png(tf.io.read_file(file_path), channels=4)
+    cm_image = tf.expand_dims(cm_image, 0)
     with file_writer.as_default():
         tf.summary.image("Confusion Matrix", cm_image, step=0)
+
+    # Calculate average AUC
+    auc_per_class = []
+    for i in range(len(CLASS_NAMES)):
+        true_positives = conf_matrix[i, i]
+        false_positives = conf_matrix[:, i].sum() - true_positives
+        false_negatives = conf_matrix[i, :].sum() - true_positives
+        true_negatives = conf_matrix.sum() - (true_positives + false_positives + false_negatives)
+
+        if true_positives + false_negatives > 0 and true_negatives + false_positives > 0:
+            sensitivity = true_positives / (true_positives + false_negatives)
+            specificity = true_negatives / (true_negatives + false_positives)
+            auc = (sensitivity + specificity) / 2
+            auc_per_class.append(auc)
+
+    average_auc = sum(auc_per_class) / len(auc_per_class) if auc_per_class else 0
+    return average_auc
 
 def plot_confusion_matrix(cm, class_names):
     figure = plt.figure(figsize=(8, 8))
@@ -71,15 +96,8 @@ def plot_confusion_matrix(cm, class_names):
     plt.xlabel('Predicted label')
     return figure
 
-def plot_to_image(figure):
-    # Save the plot to a PNG in memory.
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
+def plot_to_image(figure, file_path):
+    # Save the plot to a PNG file.
+    plt.savefig(file_path, format='png')
     # Closing the figure prevents it from being displayed directly inside the notebook.
     plt.close(figure)
-    buf.seek(0)
-    # Convert PNG buffer to TF image.
-    image = tf.image.decode_png(buf.getvalue(), channels=4)
-    # Add the batch dimension
-    image = tf.expand_dims(image, 0)
-    return image

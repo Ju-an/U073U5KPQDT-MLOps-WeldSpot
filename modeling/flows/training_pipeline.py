@@ -1,7 +1,8 @@
 import os
-from options import SPLIT_PATH, INITIAL_PATH
+from service.cloud_storage import upload_tflite
+from options import SPLIT_PATH, INITIAL_PATH, AUC_THRESHOLD
 from service.model_creation import mobilenet_model, model_load, model_store, model_convert
-from service.model_optimization import model_training
+from service.model_optimization import measure_performance, model_training
 from service.training_configuration import get_split_generators
 from prefect import flow, task
 
@@ -29,31 +30,39 @@ def train_model(model, data, epochs=5):
 
 @task
 def save_model(model, path=""):
-    model_store(model, next_model_path(path))
+    final_path = next_model_path(path)
+    print(f"Saving model to {final_path}")
+    model_store(model, final_path)
 
 @task
 def load_model(path):
     return model_load(path)
 
 @task
-def upload_model(path, valid=True):
+def deploy_model(path, valid=True, tags=["unknown"]):
     """
     Upload the model to Firebase.
 
     Args:
         path: The path to the model file.
         valid: Whether the model should be deployed to clients.
+        tags: Tags to associate with the model (e.g., staging, weld, mobilenet, test).
     """
-    model_convert(path, f"{path_models_tflite}/weld_{current_version}.tflite")
+    convert_output = f"{path_models_tflite}/weld_{current_version}.tflite"
+    model_convert(path, convert_output)
     if valid:
-        print("Uploading model to Firebase...") # TODO: Implement
+        print("Uploading model to Firebase...")
+        upload_tflite(convert_output, tags)
     else:
-        print("Ignoring model deployment due to poor performance.")
+        print("Ignoring model deployment due to poor performance. You can still manually upload it.")
 
 @task
-def evaluate_performance(model, initial_test, test):
+def evaluate_performance(model, initial_test, test=None):
     """
     Evaluate the model's performance on the test data.
+
+    This saves confusion matrices in the logs/predict folder as general_.png (the global performance compared with our prestablished initial test dataset)
+    and test_.png (based on the new data provided).
 
     Args:
         model: The trained model
@@ -63,8 +72,12 @@ def evaluate_performance(model, initial_test, test):
     Returns:
         True if the model's performance is acceptable, False otherwise.
     """
-    # Code to evaluate the model's performance
-    pass
+    auc = measure_performance(model, initial_test, "general")
+    if test is not None:
+        auc_t = measure_performance(model, test)
+        if auc_t < auc:
+            auc = auc_t
+    return auc >= AUC_THRESHOLD
 
 @task
 def find_data(initial=False, root="."):
@@ -85,7 +98,7 @@ def initial_training_flow():
     data = find_data(initial=True)
     train_model(model, data, epochs=1)
     save_model(model)
-    upload_model(model)
+    deploy_model(model, tags=["initial", "weld", "mobilenet"])
     evaluation = evaluate_performance(model, data[2])
     print(evaluation)
 
@@ -96,16 +109,18 @@ def periodic_retraining_flow():
         print("Skipping after no new drift split found.")
         return
     else:
-        model = load_model()
+        current_path = last_model_path()
+        print(f"Loading model from {current_path}")
+        model = load_model(current_version)
         train_model(model, data)
         save_model(model)
         evaluation = evaluate_performance(model, find_data(True)[2], data[2])
         if evaluation:
             print("Model performance is sufficient.")
-            upload_model(model)
+            deploy_model(model, tags=["weld", "mobilenet", f"v{current_version}"])
         else:
             print("Model performance is insufficient.")
-            upload_model(model, valid=False)
+            deploy_model(model, valid=False)
 
 if __name__ == "__main__":
     print("Testing modeling integration.")
@@ -121,4 +136,4 @@ if __name__ == "__main__":
     save_model(model, "temp")
     results = evaluate_performance(model, data[2])
     print(results)
-    upload_model(model, False)
+    deploy_model(model, False)
