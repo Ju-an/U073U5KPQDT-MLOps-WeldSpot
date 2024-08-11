@@ -25,7 +25,7 @@ SPLIT_TRAIN = 0.8 # Percentage of the dataset used for training
 SPLIT_VALID = 0.15 # Percentage of the dataset used for validation
 SPLIT_TEST = 0.05 # Percentage of the dataset used for testing and evaluation
 
-TEMP_PATH = "temp" # Folder for temporary files
+TEMP_PATH = "tmp" # Folder for temporary files
 AUGMENTATION_INCREASE = 8 # Number of (additional) augmented images generated from each image
 TARGET_SIZE = (512, 512) # The target size of the images used by the model (higher = more accurate but slower to train/infer)
 

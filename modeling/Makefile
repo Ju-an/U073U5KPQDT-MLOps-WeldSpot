@@ -42,11 +42,11 @@ quality:
 	PYTHONPATH=$(PROJECT_PATH) black . && \
 	PYTHONPATH=$(PROJECT_PATH) pylint --recursive=y .
 
-unit_tests:
+unit_tests: quality
 	source .venv/bin/activate && \
 	PYTHONPATH=$(PROJECT_PATH) pytest tests/
 
-integration_test:
+integration_test: unit_tests
 	source .venv/bin/activate && \
 	echo "Testing dataset service" && \
 	PYTHONPATH=$(PROJECT_PATH) python flows/collection_pipeline.py && \

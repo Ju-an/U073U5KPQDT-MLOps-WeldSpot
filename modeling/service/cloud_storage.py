@@ -79,18 +79,21 @@ def download_roboflow(path = RAW_PATH):
     # Process each split index csv
     count = 0
     for split in SPLIT_NAMES:
-        csv_path = os.path.join(TEMP_PATH, split, "_classes.csv")
-        with open(csv_path, mode='r') as csvfile:
-            reader = csv.reader(csvfile)
-            next(reader)  # Skip the header row
-            for row in reader:
-                image_name = row[0]
-                image_path = os.path.join(TEMP_PATH, split, image_name)
-                count += 1
-                classes = "_".join([r.strip() for r in row[1:]]) # First is the file name.
-                dest_name = f"{count}_0_{classes}.jpg" # All are non-background.
-                dest_path = os.path.join(path, dest_name)
-                shutil.copy(image_path, dest_path)
+        try:
+            csv_path = os.path.join(TEMP_PATH, split, "_classes.csv")
+            with open(csv_path, mode='r') as csvfile:
+                reader = csv.reader(csvfile)
+                next(reader)  # Skip the header row
+                for row in reader:
+                    image_name = row[0]
+                    image_path = os.path.join(TEMP_PATH, split, image_name)
+                    count += 1
+                    classes = "_".join([r.strip() for r in row[1:]]) # First is the file name.
+                    dest_name = f"{count}_0_{classes}.jpg" # All are non-background.
+                    dest_path = os.path.join(path, dest_name)
+                    shutil.copy(image_path, dest_path)
+        except FileNotFoundError:
+            print(f"Error: {split} split index not found.")
     shutil.rmtree(TEMP_PATH)
     return count
 
