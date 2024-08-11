@@ -36,7 +36,12 @@ class _FeedbackPopupState extends State<FeedbackPopup> {
 
   Future<void> sendFeedback() async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final feedbackString = categories.map((category) => selectedCategories[category]! ? '1' : '0').join('_');
+    final feedbackString = widget.classification.entries.map((entry) {
+      final category = entry.key;
+      final value = entry.value;
+      final selected = selectedCategories[category]!;
+      return '${selected ? 1 : 0}-${value.toStringAsFixed(1)}';
+    }).join('_');
     final fileName = '$timestamp_$feedbackString.jpg';
     final file = File(widget.imagePath);
 
