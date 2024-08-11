@@ -18,6 +18,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_classification_mobilenet/helper/image_classification_helper.dart';
+import 'package:image_classification_mobilenet/ui/feedback_popup.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({
@@ -36,6 +37,7 @@ class CameraScreenState extends State<CameraScreen>
   late CameraController cameraController;
   late ImageClassificationHelper imageClassificationHelper;
   Map<String, double>? classification;
+  Map<String, double>? _storedClassification; //For the last predictions
   bool _isProcessing = false;
   double? _fps;
   double _confidenceThreshold = 0.5;
@@ -66,6 +68,7 @@ class CameraScreenState extends State<CameraScreen>
         await imageClassificationHelper.inferenceCameraFrame(cameraImage);
     // Filter based on confidence threshold and "Background" class.
     if (classification != null) {
+      _storedClassification = Map.from(classification!); // Store in state
       var entries = classification!.entries.toList()
         ..sort((a, b) => a.value.compareTo(b.value));
       var reversedEntries = entries.reversed.toList();
@@ -155,6 +158,38 @@ class CameraScreenState extends State<CameraScreen>
     );
   }
 
+Future<void> takePicture() async {
+    if (!cameraController.value.isInitialized) {
+      return;
+    }
+    final Directory extDir = await getApplicationDocumentsDirectory();
+    final String dirPath = '${extDir.path}/Pictures/flutter_test';
+    await Directory(dirPath).create(recursive: true);
+    final String filePath = '$dirPath/${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.jpg';
+
+    if (cameraController.value.isTakingPicture) {
+      return;
+    }
+
+    try {
+      await cameraController.takePicture(filePath);
+      log('Providing user feedback from $filePath');
+      if (_storedClassification != null) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return FeedbackPopup(
+              imagePath: filePath,
+              classification: _storedClassification!,
+            );
+          },
+        );
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Size size = MediaQuery.of(context).size;
@@ -167,6 +202,17 @@ class CameraScreenState extends State<CameraScreen>
             : cameraWidget(context),
       ),
     );
+
+  list.add(Align(
+    alignment: Alignment.topRight,
+    child: IconButton(
+      icon: Icon(Icons.camera_alt, color: Colors.white),
+      onPressed: () async {
+        await takePicture();
+      },
+    ),
+  ));
+
     list.add(Align(
       alignment: Alignment.bottomCenter,
       child: SingleChildScrollView(

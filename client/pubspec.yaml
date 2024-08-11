@@ -16,11 +16,12 @@ dependencies:
   path: ^1.8.3
   firebase_core: ^3.2.0
   firebase_storage: ^12.1.1
+  firebase_ml_model_downloader: ^0.3.0+4
   path_provider: ^2.0.15
   image_picker: ^0.8.8
   tflite_flutter: ^0.10.4
   connectivity: ^3.0.6
-  firebase_ml_model_downloader: ^0.3.0+4
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
