@@ -34,7 +34,7 @@ class _FeedbackPopupState extends State<FeedbackPopup> {
     }
   }
 
-  Future<void> sendFeedback() async {
+  Future<void> sendFeedback(BuildContext context) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final feedbackString = widget.classification.entries.map((entry) {
       final category = entry.key;
@@ -42,14 +42,16 @@ class _FeedbackPopupState extends State<FeedbackPopup> {
       final selected = selectedCategories[category]!;
       return '${selected ? 1 : 0}-${value.toStringAsFixed(1)}';
     }).join('_');
-    final fileName = '$timestamp_$feedbackString.jpg';
+    final fileName = '${timestamp}_$feedbackString.jpg';
     final file = File(widget.imagePath);
 
     try {
       await FirebaseStorage.instance.ref('feedback/$fileName').putFile(file);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Feedback sent successfully')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Feedback sent successfully')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error sending feedback: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error sending feedback: $e')));
     }
     Navigator.of(context).pop();
   }
@@ -57,7 +59,7 @@ class _FeedbackPopupState extends State<FeedbackPopup> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Send Feedback'),
+      title: const Text('Send Feedback'),
       content: SingleChildScrollView(
         child: ListBody(
           children: categories.map((category) {
@@ -75,8 +77,8 @@ class _FeedbackPopupState extends State<FeedbackPopup> {
       ),
       actions: [
         TextButton(
-          onPressed: sendFeedback,
-          child: Text('Send Feedback'),
+          onPressed: () => sendFeedback(context),
+          child: const Text('Send Feedback'),
         ),
       ],
     );

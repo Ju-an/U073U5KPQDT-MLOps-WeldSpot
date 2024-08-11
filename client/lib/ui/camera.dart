@@ -19,6 +19,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_classification_mobilenet/helper/image_classification_helper.dart';
 import 'package:image_classification_mobilenet/ui/feedback_popup.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({
@@ -158,22 +160,24 @@ class CameraScreenState extends State<CameraScreen>
     );
   }
 
-Future<void> takePicture() async {
+  Future<void> takePicture() async {
     if (!cameraController.value.isInitialized) {
       return;
     }
     final Directory extDir = await getApplicationDocumentsDirectory();
     final String dirPath = '${extDir.path}/Pictures/flutter_test';
     await Directory(dirPath).create(recursive: true);
-    final String filePath = '$dirPath/${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.jpg';
+    final String filePath =
+        '$dirPath/${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.jpg';
 
     if (cameraController.value.isTakingPicture) {
       return;
     }
 
     try {
-      await cameraController.takePicture(filePath);
-      log('Providing user feedback from $filePath');
+      XFile pic = await cameraController.takePicture();
+      pic.saveTo(filePath);
+      debugPrint('Providing user feedback from $filePath');
       if (_storedClassification != null) {
         showDialog(
           context: context,
@@ -186,7 +190,7 @@ Future<void> takePicture() async {
         );
       }
     } catch (e) {
-      print(e);
+      debugPrint(e as String?);
     }
   }
 
@@ -203,15 +207,15 @@ Future<void> takePicture() async {
       ),
     );
 
-  list.add(Align(
-    alignment: Alignment.topRight,
-    child: IconButton(
-      icon: Icon(Icons.camera_alt, color: Colors.white),
-      onPressed: () async {
-        await takePicture();
-      },
-    ),
-  ));
+    list.add(Align(
+      alignment: Alignment.topRight,
+      child: IconButton(
+        icon: const Icon(Icons.camera_alt, color: Colors.white),
+        onPressed: () async {
+          await takePicture();
+        },
+      ),
+    ));
 
     list.add(Align(
       alignment: Alignment.bottomCenter,
