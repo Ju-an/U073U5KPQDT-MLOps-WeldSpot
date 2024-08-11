@@ -14,9 +14,14 @@ ifneq (,$(wildcard ./.env))
 endif
 
 dependencies_main:
-	echo "[WELDSPOT] INSTALLING PYTHON AND PRECOMMIT" && \
+	echo "[WELDSPOT] INSTALLING DEVELOPMENT AND BUILD DEPENDENCIES (DOCKER, PYTHON, PRECOMMIT, ETC)" && \
 	sudo apt update -y && sudo apt upgrade -y && \
-	sudo apt install python3 python3-venv python3-pip pre-commit -y && \
+	sudo apt install python3 python3-venv python3-pip pre-commit ca-certificates curl -y && \
+	sudo install -m 0755 -d /etc/apt/keyrings && \
+	sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
+	sudo chmod a+r /etc/apt/keyrings/docker.asc && \
+	echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+	sudo apt update -y && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin && \
 	pre-commit install
 
 dependencies_client:

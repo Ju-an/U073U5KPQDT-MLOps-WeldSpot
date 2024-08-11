@@ -1,33 +1,45 @@
 import os
-from service.cloud_storage import upload_tflite
-from options import SPLIT_PATH, INITIAL_PATH, AUC_THRESHOLD
-from service.model_creation import mobilenet_model, model_load, model_store, model_convert
-from service.model_optimization import measure_performance, model_training
-from service.training_configuration import get_split_generators
+
 from prefect import flow, task
 
-SKIP_EVAL = True # Bypass evaluation of the model performance
-current_version = 0 # Latest version of the model
-path_models_best = "models/best" # Path to the best models
-path_models_tflite = "models/deploy" # Path to the converted models to upload
-latest_split = "" # Latest split of the dataset collected and used for retraining
+from options import AUC_THRESHOLD, INITIAL_PATH, SPLIT_PATH
+from service.cloud_storage import upload_tflite
+from service.model_creation import (
+    mobilenet_model,
+    model_convert,
+    model_load,
+    model_store,
+)
+from service.model_optimization import measure_performance, model_training
+from service.training_configuration import get_split_generators
+
+SKIP_EVAL = True  # Bypass evaluation of the model performance
+current_version = 0  # Latest version of the model
+path_models_best = "models/best"  # Path to the best models
+path_models_tflite = "models/deploy"  # Path to the converted models to upload
+latest_split = ""  # Latest split of the dataset collected and used for retraining
+
 
 def last_model_path():
     return f"{path_models_best}/weld_{current_version}.keras"
+
 
 def next_model_path(root="."):
     global current_version
     current_version += 1
     return f"{root}/{path_models_best}/weld_{current_version}.keras"
 
+
 @task
 def create_model():
     return mobilenet_model()
+
 
 @task
 def train_model(model, data, epochs=5):
     print("Starting model training...")
     return model_training(model, data[0], data[1], epochs)
+
 
 @task
 def save_model(model, path=""):
@@ -35,9 +47,11 @@ def save_model(model, path=""):
     print(f"Saving model to {final_path}")
     model_store(model, final_path)
 
+
 @task
 def load_model(path):
     return model_load(path)
+
 
 @task
 def deploy_model(path, valid=True, tags=["unknown"]):
@@ -55,7 +69,10 @@ def deploy_model(path, valid=True, tags=["unknown"]):
         print("Uploading model to Firebase...")
         upload_tflite(convert_output, tags)
     else:
-        print("Ignoring model deployment due to poor performance. You can still manually upload it.")
+        print(
+            "Ignoring model deployment due to poor performance. You can still manually upload it."
+        )
+
 
 @task
 def evaluate_performance(model, initial_test, test=None):
@@ -73,7 +90,7 @@ def evaluate_performance(model, initial_test, test=None):
     Returns:
         True if the model's performance is acceptable, False otherwise.
     """
-    if(SKIP_EVAL):
+    if SKIP_EVAL:
         return True
     auc = measure_performance(model, initial_test, "general")
     if test is not None:
@@ -82,18 +99,26 @@ def evaluate_performance(model, initial_test, test=None):
             auc = auc_t
     return auc >= AUC_THRESHOLD
 
+
 @task
 def find_data(initial=False, root="."):
     if initial:
         return *get_split_generators(INITIAL_PATH if root == "." else root), False
-    directories = [f for f in os.listdir(f"{root}/{SPLIT_PATH}") if os.path.isdir(os.path.join(f"{root}/{SPLIT_PATH}", f))]
+    directories = [
+        f
+        for f in os.listdir(f"{root}/{SPLIT_PATH}")
+        if os.path.isdir(os.path.join(f"{root}/{SPLIT_PATH}", f))
+    ]
     if not directories:
-        print("WARNING: No Dataset Splits found, attempting to load Initial dataset instead.")
+        print(
+            "WARNING: No Dataset Splits found, attempting to load Initial dataset instead."
+        )
         return *get_split_generators(INITIAL_PATH), True
     path = sorted(directories, reverse=True)[0]
     repeating = path == latest_split
     latest_split = path
     return *get_split_generators(path), repeating
+
 
 @flow
 def initial_training_flow():
@@ -104,6 +129,7 @@ def initial_training_flow():
     deploy_model(model, tags=["initial", "weld", "mobilenet"])
     evaluation = evaluate_performance(model, data[2])
     print(evaluation)
+
 
 @flow
 def periodic_retraining_flow():
@@ -124,6 +150,7 @@ def periodic_retraining_flow():
         else:
             print("Model performance is insufficient.")
             deploy_model(model, valid=False)
+
 
 if __name__ == "__main__":
     print("Testing modeling integration.")

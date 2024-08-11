@@ -1,4 +1,5 @@
 import pytest
+
 from service.cloud_storage import init_firebase_storage
 
 

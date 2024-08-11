@@ -1,18 +1,18 @@
-import pytest, shutil, os
+import os
+import shutil
+
+import pytest
 
 from service.cloud_storage import download_roboflow
 
+
 def test_download_roboflow():
-    tmp_dir = "tmp"
+    tmp_dir = "temp"
     os.makedirs(tmp_dir, exist_ok=True)
 
-    try:
-        # Execute the function
-        download_roboflow(tmp_dir)
 
-        # Verify that files are downloaded
-        assert len(os.listdir(tmp_dir)) > 0, "No files were downloaded"
+    # Execute the function
+    total = download_roboflow(f"modeling/{tmp_dir}")
 
-    finally:
-        # Teardown
-        shutil.rmtree(tmp_dir)
+    # Verify that files were downloaded
+    assert total > 0, "No files were downloaded"

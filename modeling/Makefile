@@ -42,7 +42,7 @@ quality:
 	PYTHONPATH=$(PROJECT_PATH) black . && \
 	PYTHONPATH=$(PROJECT_PATH) pylint --recursive=y .
 
-unit_tests: quality
+unit_tests:
 	source .venv/bin/activate && \
 	PYTHONPATH=$(PROJECT_PATH) pytest tests/
 
@@ -53,8 +53,16 @@ integration_test: unit_tests
 	echo "Testing model service" && \
 	PYTHONPATH=$(PROJECT_PATH) python flows/training_pipeline.py
 
+list_flows:
+	source .venv/bin/activate && \
+	PYTHONPATH=$(PROJECT_PATH) prefect deployment ls
+
+run_flow:
+	source .venv/bin/activate && \
+	PYTHONPATH=$(PROJECT_PATH) prefect deployment run $(FLOW_NAME)
+
 build_image:
-	docker build -t $(DOCKER_IMAGE_NAME) .
+	sudo docker build -t $(DOCKER_IMAGE_NAME) .
 
 export_image: build_image
 	docker save -o $(DOCKER_IMAGE_NAME).tar $(DOCKER_IMAGE_NAME)

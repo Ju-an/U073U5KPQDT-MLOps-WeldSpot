@@ -1,11 +1,30 @@
-
 import os
 import shutil
-from sklearn.model_selection import train_test_split
-from PIL import Image
 
-from options import TARGET_SIZE, CLASS_NAMES, SPLIT_NAMES, RAW_PATH, PROCESSED_PATH, AUGMENTED_PATH, AUGMENTATION_INCREASE, SPLIT_VALID, SPLIT_TEST, CLASS_THRESHOLD
-from service.image_augmentations import random_rotation, random_flip, random_color_jitter, random_noise, median_filter, gaussian_filter
+from PIL import Image
+from sklearn.model_selection import train_test_split
+
+from options import (
+    AUGMENTATION_INCREASE,
+    AUGMENTED_PATH,
+    CLASS_NAMES,
+    CLASS_THRESHOLD,
+    PROCESSED_PATH,
+    RAW_PATH,
+    SPLIT_NAMES,
+    SPLIT_TEST,
+    SPLIT_VALID,
+    TARGET_SIZE,
+)
+from service.image_augmentations import (
+    gaussian_filter,
+    median_filter,
+    random_color_jitter,
+    random_flip,
+    random_noise,
+    random_rotation,
+)
+
 
 def divide_image_labels(image_path):
     """
@@ -22,14 +41,16 @@ def divide_image_labels(image_path):
     division = file_name.split("_")
     return division[0], [d.split(".")[0] if "." in d else d for d in division[1:]]
 
+
 def divide_class_names(labels):
     """
     Gets the class names from the labels it belongs to."""
     accepted = []
-    for(i, label) in enumerate(labels):
+    for i, label in enumerate(labels):
         if float(label) >= CLASS_THRESHOLD:
             accepted.append(i)
     return [CLASS_NAMES[int(label)] for label in accepted]
+
 
 def load_image(path):
     """
@@ -37,11 +58,13 @@ def load_image(path):
     """
     return Image.open(path)
 
+
 def save_image(image, path):
     """
     Save an image to the specified path.
     """
     image.save(path)
+
 
 def resize_image(image, size):
     """
@@ -49,11 +72,13 @@ def resize_image(image, size):
     """
     return image.resize(size)
 
+
 def normalize_image(image):
     """
     Convert the image to pixel values between 0 and 1.
     """
     return image / 255.0
+
 
 def preprocess_images():
     """
@@ -73,9 +98,12 @@ def preprocess_images():
         image = resize_image(image, TARGET_SIZE)
         image = median_filter(image)
         image = gaussian_filter(image)
-        save_image(image, os.path.join(PROCESSED_PATH, f"{name}_{'_'.join(labels)}.jpg"))
+        save_image(
+            image, os.path.join(PROCESSED_PATH, f"{name}_{'_'.join(labels)}.jpg")
+        )
         count += 1
     return count
+
 
 def augment_images(augments=AUGMENTATION_INCREASE):
     """
@@ -94,10 +122,14 @@ def augment_images(augments=AUGMENTATION_INCREASE):
             augmented = random_flip(augmented)
             augmented = random_color_jitter(augmented)
             augmented = random_noise(augmented)
-            save_image(augmented, os.path.join(AUGMENTED_PATH, f"{name}-{total}_{'_'.join(labels)}.jpg"))
+            save_image(
+                augmented,
+                os.path.join(AUGMENTED_PATH, f"{name}-{total}_{'_'.join(labels)}.jpg"),
+            )
             total += 1
         count += 1
     return count, total
+
 
 def group_images_by_class(files, tmp):
     """
@@ -109,7 +141,11 @@ def group_images_by_class(files, tmp):
         for name in classes:
             class_dir = os.path.join(tmp, name)
             os.makedirs(class_dir, exist_ok=True)
-            shutil.copy(os.path.join(AUGMENTED_PATH, file_name), os.path.join(class_dir, file_name))
+            shutil.copy(
+                os.path.join(AUGMENTED_PATH, file_name),
+                os.path.join(class_dir, file_name),
+            )
+
 
 def split_images(split_dir):
     """
@@ -134,22 +170,33 @@ def split_images(split_dir):
         class_files = [f for f in os.listdir(class_dir) if f.endswith(".jpg")]
 
         valid_test_split = SPLIT_VALID + SPLIT_TEST
-        train_files, test_files = train_test_split(class_files, test_size=valid_test_split)
+        train_files, test_files = train_test_split(
+            class_files, test_size=valid_test_split
+        )
         test_split = SPLIT_TEST / valid_test_split
         valid_files, test_files = train_test_split(test_files, test_size=test_split)
-        
+
         # Make sure subpath for class_name inside splits exist
         for split_type in SPLIT_NAMES:
             os.makedirs(os.path.join(split_dir, split_type, class_name), exist_ok=True)
 
         for file_name in train_files:
-            shutil.move(os.path.join(class_dir, file_name), os.path.join(split_dir, "train", class_name, file_name))
+            shutil.move(
+                os.path.join(class_dir, file_name),
+                os.path.join(split_dir, "train", class_name, file_name),
+            )
 
         for file_name in valid_files:
-            shutil.move(os.path.join(class_dir, file_name), os.path.join(split_dir, "valid", class_name, file_name))
+            shutil.move(
+                os.path.join(class_dir, file_name),
+                os.path.join(split_dir, "valid", class_name, file_name),
+            )
 
         for file_name in test_files:
-            shutil.move(os.path.join(class_dir, file_name), os.path.join(split_dir, "test", class_name, file_name))
+            shutil.move(
+                os.path.join(class_dir, file_name),
+                os.path.join(split_dir, "test", class_name, file_name),
+            )
 
     shutil.rmtree(tmp)
     return total

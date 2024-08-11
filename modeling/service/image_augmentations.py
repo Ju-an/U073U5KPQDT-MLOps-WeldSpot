@@ -1,6 +1,8 @@
-from PIL import Image, ImageFilter, ImageEnhance
-import numpy as np
 import random
+
+import numpy as np
+from PIL import Image, ImageEnhance, ImageFilter
+
 
 def clip_image(image_array):
     """
@@ -8,17 +10,20 @@ def clip_image(image_array):
     """
     return Image.fromarray(image_array.astype(np.uint8))
 
+
 def median_filter(image, size=3):
     """
     Apply a median filter to the image to reduce spikes.
     """
     return image.filter(ImageFilter.MedianFilter(size=size))
 
+
 def gaussian_filter(image, radius=1):
     """
     Apply a gaussian smooth to the image to reduce noise.
     """
     return image.filter(ImageFilter.GaussianBlur(radius=radius))
+
 
 def poisson_noise(image, scale=0.99):
     """
@@ -28,6 +33,7 @@ def poisson_noise(image, scale=0.99):
     noisy_image = np.random.poisson(image_array * scale) / float(scale)
     noisy_image = np.clip(noisy_image, 0, 255).astype(np.uint8)
     return Image.fromarray(noisy_image)
+
 
 def salt_and_pepper_noise(image, amount=0.001):
     """
@@ -48,12 +54,14 @@ def salt_and_pepper_noise(image, amount=0.001):
 
     return clip_image(image_array)
 
+
 def random_rotation(image, range=12):
     """
     Apply a random arbitrary rotation to the image.
     """
     angle = random.uniform(-range, range)
     return image.rotate(angle)
+
 
 def random_flip(image, chance=0.5):
     """
@@ -64,6 +72,7 @@ def random_flip(image, chance=0.5):
     if random.random() < chance:
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
     return image
+
 
 def random_color_jitter(image, range=0.001):
     """
@@ -76,6 +85,7 @@ def random_color_jitter(image, range=0.001):
     enhancer = ImageEnhance.Contrast(image)
     image = enhancer.enhance(1 + random.uniform(-range, range))
     return image
+
 
 def random_noise(image):
     """

@@ -1,17 +1,32 @@
-from service.cloud_storage import download_firebase, download_roboflow
-from service.image_transformations import preprocess_images, augment_images, split_images
-from service.metric_monitoring import drift_detection
-from prefect import task, flow
-from prefect.events import emit_event
-from prefect.task_runners import SequentialTaskRunner
-import os, zipfile, shutil
+import os
+import shutil
+import zipfile
 from datetime import datetime
 
-from options import CLASS_NAMES, SPLIT_NAMES, RAW_PATH, PROCESSED_PATH, AUGMENTED_PATH, SPLIT_PATH
+from prefect import flow, task
+from prefect.events import emit_event
+from prefect.task_runners import SequentialTaskRunner
+
+from options import (
+    AUGMENTED_PATH,
+    CLASS_NAMES,
+    PROCESSED_PATH,
+    RAW_PATH,
+    SPLIT_NAMES,
+    SPLIT_PATH,
+)
+from service.cloud_storage import download_firebase, download_roboflow
+from service.image_transformations import (
+    augment_images,
+    preprocess_images,
+    split_images,
+)
+from service.metric_monitoring import drift_detection
 
 DATA_DIR = "data"
 INITIAL_ZIP = "data/initial.zip"
 INITIAL_PATH = "data/initial"
+
 
 def empty_folder(path):
     """
@@ -25,16 +40,18 @@ def empty_folder(path):
             count += 1
     return count
 
+
 @task
 def download_files_initial():
     """
     Downloads the initial dataset from Roboflow and extracts our background images zip.
     """
-    with zipfile.ZipFile(INITIAL_ZIP, 'r') as zip_ref:
-            zip_ref.extractall(DATA_DIR)
+    with zipfile.ZipFile(INITIAL_ZIP, "r") as zip_ref:
+        zip_ref.extractall(DATA_DIR)
     downloaded = download_roboflow()
     print(f"Downloaded {downloaded} images from Roboflow.")
     return downloaded
+
 
 @task
 def download_files():
@@ -45,12 +62,14 @@ def download_files():
     print(f"Downloaded and deleted {count} images from Firebase.")
     return count
 
+
 @task
 def preprocess_files():
     processed = preprocess_images()
     deleted = empty_folder(RAW_PATH)
     print(f"Preprocessed {processed}/{deleted} images.")
     return processed
+
 
 @task
 def augment_files(augments=1):
@@ -59,6 +78,7 @@ def augment_files(augments=1):
     print(f"Augmented {augmented}/{deleted} images.")
     return total
 
+
 @task
 def split_files(destination=INITIAL_PATH):
     split = split_images(destination)
@@ -66,7 +86,14 @@ def split_files(destination=INITIAL_PATH):
     print(f"Split {split}/{deleted} images.")
     return split
 
-@flow(name="Initial Dataset Collection Pipeline", task_runner=SequentialTaskRunner(), log_prints=True, retries=5, retry_delay_seconds=15)
+
+@flow(
+    name="Initial Dataset Collection Pipeline",
+    task_runner=SequentialTaskRunner(),
+    log_prints=True,
+    retries=5,
+    retry_delay_seconds=15,
+)
 def initial_dataset_flow():
     download_initial = download_files_initial()
     if download_initial == 0:
@@ -84,7 +111,14 @@ def initial_dataset_flow():
     if split_initial == 0:
         print("No initial images to split.")
 
-@flow(name="Daily Dataset Collection Pipeline", task_runner=SequentialTaskRunner(), log_prints=True, retries=3, retry_delay_seconds=10)
+
+@flow(
+    name="Daily Dataset Collection Pipeline",
+    task_runner=SequentialTaskRunner(),
+    log_prints=True,
+    retries=3,
+    retry_delay_seconds=10,
+)
 def periodic_monitoring_flow():
     download = download_files()
     if download == 0:
@@ -97,6 +131,7 @@ def periodic_monitoring_flow():
             print(f"{class_name}: {m}")
     if drift is None:
         print("skipping after no drift detected.")
+        empty_folder(RAW_PATH)
         return
     preprocess = preprocess_files()
     if preprocess == 0:
@@ -106,12 +141,21 @@ def periodic_monitoring_flow():
     if augment == 0:
         print("Skipping after no images preprocess.")
         return
-    split = split_files(destination=f"{SPLIT_PATH}/{datetime.now().strftime('%Y%m%d')}/")
+    split = split_files(
+        destination=f"{SPLIT_PATH}/{datetime.now().strftime('%Y%m%d')}/"
+    )
     if split == 0:
         print("No images to split.")
         return
     if drift is not None:
-        emit_event(event="drift.detected", resource={"prefect.resource.id": "dataset.auc", "prefect.resource.name": drift})
+        emit_event(
+            event="drift.detected",
+            resource={
+                "prefect.resource.id": "dataset.auc",
+                "prefect.resource.name": drift,
+            },
+        )
+
 
 if __name__ == "__main__":
     print("Testing dataset integration.")

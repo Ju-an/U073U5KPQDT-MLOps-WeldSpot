@@ -135,7 +135,7 @@ The retraining can be manually triggered from the cloud without the need of the 
 # Installation
 
 It is recommended to use a clean installation of linux (or WSL, or a docker container), preferably Ubuntu 22.04+,
-as the setup script installs several packages, including specific android sdk version. I used Ubuntu 24.04 with Python 3.12.
+as the setup script installs several packages, including specific android sdk version. I used Ubuntu 24.04 with Python 3.10.
 If conflicts arise, you may check the Makefile `setup` and `dependencies_` scripts (more info on this later) for troubleshooting or try to clean your system (I take no responsibility if your machine breaks, sorry).
 
 ## Accounts setting
@@ -393,11 +393,16 @@ The initial run will download the Roboflow dataset. Additionally it has a flow p
 
 ![Initial flow](images/PrefectInitialCollection.png)
 
+The initial dataset collection (from Roboflow) takes some time because it downloads around 3k images.
+Because the dataset is big and has several augmented images (although the page states they don't), we only do an additional augmentation (1 original image = 2 end images). The retraining with (less images downloaded) from the user feedbacks is configured with 8 augmentations.
+
 The metric to monitor that I set is AUC. AUC (Area Under the Curve) is a metric to measure how well a model can distinguish between different classes.
 
 ![Periodic flow](images/PrefectPeriodicCollection.png)
 
-When drift is detected (the AUC goes bellow the threshold configured in options) it will generate the split with the new data so that the training service finds and retrains last model with them.
+When drift is detected (the AUC goes below the threshold configured in options) it will generate the split with the new data so that the training service finds and retrains last model with them.
+
+We can manually start the periodic flow of data collection by running ...
 
 ##### Forcing retraining
 

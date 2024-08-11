@@ -1,18 +1,28 @@
 """
 Module used for accessing remote storage from Firebase (using the Firebase Admin SDK) and from Roboflow.
 """
-import os
-import csv
-import shutil
-import roboflow
-import firebase_admin
-from firebase_admin import credentials, storage, ml
 
-from options import ROBOFLOW_API_KEY, FIREBASE_SDK_ADMIN_FILE_PATH, FIREBASE_STORAGE_BUCKET_NAME, SPLIT_NAMES, RAW_PATH, TEMP_PATH
+import csv
+import os
+import shutil
+
+import firebase_admin
+import roboflow
+from firebase_admin import credentials, ml, storage
+
+from options import (
+    FIREBASE_SDK_ADMIN_FILE_PATH,
+    FIREBASE_STORAGE_BUCKET_NAME,
+    RAW_PATH,
+    ROBOFLOW_API_KEY,
+    SPLIT_NAMES,
+    TEMP_PATH,
+)
 
 ROBOFLOW_WELDING_DATASET_WORKSPACE = "welding-2bplp"
 ROBOFLOW_WELDING_DATASET_PROJECT = "weld-quality-inspection-rei9l"
 ROBOFLOW_WELDING_DATASET_VERSION = 9
+
 
 def init_firebase_storage():
     """
@@ -65,7 +75,7 @@ def delete_content(storage, filename):
     print(f"File {filename} deleted")
 
 
-def download_roboflow(path = RAW_PATH):
+def download_roboflow(path=RAW_PATH):
     """
     Downloads the Roboflow Welding dataset to the specified path.
 
@@ -73,7 +83,9 @@ def download_roboflow(path = RAW_PATH):
         path (str): The path to save the downloaded dataset to.
     """
     rf = roboflow.Roboflow(api_key=ROBOFLOW_API_KEY)
-    project = rf.workspace(ROBOFLOW_WELDING_DATASET_WORKSPACE).project(ROBOFLOW_WELDING_DATASET_PROJECT)
+    project = rf.workspace(ROBOFLOW_WELDING_DATASET_WORKSPACE).project(
+        ROBOFLOW_WELDING_DATASET_PROJECT
+    )
     version = project.version(ROBOFLOW_WELDING_DATASET_VERSION)
     version.download(model_format="multiclass", location=TEMP_PATH)
     # Process each split index csv
@@ -81,15 +93,17 @@ def download_roboflow(path = RAW_PATH):
     for split in SPLIT_NAMES:
         try:
             csv_path = os.path.join(TEMP_PATH, split, "_classes.csv")
-            with open(csv_path, mode='r') as csvfile:
+            with open(csv_path, mode="r") as csvfile:
                 reader = csv.reader(csvfile)
                 next(reader)  # Skip the header row
                 for row in reader:
                     image_name = row[0]
                     image_path = os.path.join(TEMP_PATH, split, image_name)
                     count += 1
-                    classes = "_".join([r.strip() for r in row[1:]]) # First is the file name.
-                    dest_name = f"{count}_0_{classes}.jpg" # All are non-background.
+                    classes = "_".join(
+                        [r.strip() for r in row[1:]]
+                    )  # First is the file name.
+                    dest_name = f"{count}_0_{classes}.jpg"  # All are non-background.
                     dest_path = os.path.join(path, dest_name)
                     shutil.copy(image_path, dest_path)
         except FileNotFoundError:
@@ -97,7 +111,8 @@ def download_roboflow(path = RAW_PATH):
     shutil.rmtree(TEMP_PATH)
     return count
 
-def download_firebase(path = RAW_PATH):
+
+def download_firebase(path=RAW_PATH):
     bucket = init_firebase_storage()
     count = 0
 
@@ -114,14 +129,14 @@ def download_firebase(path = RAW_PATH):
 
     return count
 
+
 def upload_tflite(model_path, model_tags):
     bucket = init_firebase_storage()
     model_name = os.path.splitext(os.path.basename(model_path))[0]
     source = ml.TFLiteGCSModelSource.from_tflite_model_file(model_path)
     tflite_format = ml.TFLiteFormat(model_source=source)
     model = ml.Model(
-        display_name=model_name,
-        tags=model_tags,
-        model_format=tflite_format)
+        display_name=model_name, tags=model_tags, model_format=tflite_format
+    )
     new_model = ml.create_model(model)
     ml.publish_model(new_model.model_id)
