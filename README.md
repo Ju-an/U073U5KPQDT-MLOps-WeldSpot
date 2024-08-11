@@ -447,16 +447,20 @@ This way, combined with the prefect flows telling us if the moel was deployed or
 
 After building the app, and installing it (your device may trigger some warning dialog about installing app outside from android app store or about analyzing the app for security) in your device, you can find the app named "image_classification_mobilenet". The app presents you with a the view of your phone camera (accepting permissions may be required).
 
+###### Note it may look frozen for a few seconds when you open it because it's downloading and loading the model into memory (and I haven't programmed a "loading" screen, apologies).
+
 ![Main flutter view](images/FlutterMain.png)
 
 The view will show us a panel below with the most probable classes predicted in the image in real-time. It also shows the time frequency of predictions (e.g., FPS, how long it took to pass the image through the model). Performance of predictions may vary depending on smartphone power.
 
 The user can press a capture button, to trigger their feedback by taking a picture from the current camera.
-**![Privacy Warning](images/Warning.png) Beware that using my provided apk and not compiling with your settings will upload the image to MY cloud storage, it's limited like yours so we won't be charged, but you won't see your own Prefect cloud trigger and also don't send me strange pictures, please**.
+**![Privacy Warning](images/Warning.png) Beware that you should compile your own app with its configuration pointing to YOUR Firebase cloud so YOUR own Prefect cloud triggers**.
 
 ![Flutter feedback](images/FlutterFeedback.png)
 
 Here the user can manually tell which classes are showing and which not by checking the boxes. Then the image will be sent to Firebase storage with those corrections.
+
+###### Note it may also take a few seconds for the picture to be taken and show the selection as I also haven't optimized that part either.
 
 # Conclusions
 

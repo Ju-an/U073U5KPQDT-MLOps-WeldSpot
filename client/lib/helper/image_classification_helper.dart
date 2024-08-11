@@ -58,16 +58,19 @@ class ImageClassificationHelper {
     if (isDownloadModelAvailable) {
       try {
         await modelUpdater.checkAndUpdateModel();
-        log("Model loaded from Firebase");
+        log("Model updated from Firebase");
       } catch (e) {
         log('Error loading model from Firebase: $e');
       }
     }
 
     final modelFile = await modelUpdater.getModelFile();
-    interpreter = Interpreter.fromFile(modelFile, options: options);
-    log('Model loaded from ${modelFile.path}');
-
+    if (await modelFile.exists()) {
+      interpreter = Interpreter.fromFile(modelFile, options: options);
+      log('Model loaded from ${modelFile.path}');
+    } else {
+      log('Model file does not exist at ${modelFile.path}');
+    }
     // Get tensor input shape [1, 224, 224, 3]
     inputTensor = interpreter.getInputTensors().first;
     // Get tensor output shape [1, 1001]

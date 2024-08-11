@@ -175,3 +175,12 @@ google-services.json
 firebase_options.dart
 client/android/app/google-services.json
 logs/
+client/.firebaserc
+client/firebase.json
+client/linux/flutter/generated_plugin_registrant.cc
+client/linux/flutter/generated_plugin_registrant.h
+client/linux/flutter/generated_plugins.cmake
+client/macos/Flutter/GeneratedPluginRegistrant.swift
+client/windows/flutter/generated_plugin_registrant.cc
+client/windows/flutter/generated_plugin_registrant.h
+client/windows/flutter/generated_plugins.cmake

@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ModelUpdater {
@@ -57,21 +58,30 @@ class ModelUpdater {
 
   Future<void> checkAndUpdateModel() async {
     try {
-      log('Checking for new models...');// TODO: Use firestore to keep track.
-      final models = ["weld_0", "weld_1", "weld_2", "weld_3", "weld_4", "weld_5"];
+      log('Checking for new models...'); // TODO: Use firestore to keep track.
+      final models = [
+        "weld_0",
+        "weld_1",
+        "weld_2",
+        "weld_3",
+        "weld_4",
+        "weld_5"
+      ];
       String latestVersion = '0';
 
       for (var model in models) {
         final modelName = model;
         if (modelName.startsWith(this.modelName)) {
           final version = modelName.split('_').last;
-          if (int.tryParse(version) != null && int.parse(version) > int.parse(latestVersion)) {
+          if (int.tryParse(version) != null &&
+              int.parse(version) > int.parse(latestVersion)) {
             latestVersion = version;
           }
         }
       }
 
       final localVersion = await getLocalModelVersion();
+      log("Latest version: $latestVersion, Local version: $localVersion");
       if (int.parse(latestVersion) > int.parse(localVersion)) {
         await downloadModel(latestVersion);
         await saveModelVersion(latestVersion);
@@ -88,7 +98,11 @@ class ModelUpdater {
     if (await localModelFile.exists()) {
       return localModelFile;
     } else {
-      return File(includedModel);
+      final byteData = await rootBundle.load(includedModel);
+      final buffer = byteData.buffer;
+      await localModelFile.writeAsBytes(
+          buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      return localModelFile;
     }
   }
 }

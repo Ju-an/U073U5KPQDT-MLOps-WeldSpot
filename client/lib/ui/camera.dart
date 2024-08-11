@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import 'dart:developer';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +40,7 @@ class CameraScreenState extends State<CameraScreen>
   late ImageClassificationHelper imageClassificationHelper;
   Map<String, double>? classification;
   Map<String, double>? _storedClassification; //For the last predictions
+  bool _isHelperInitialized = false; // Don't process frame until model ready
   bool _isProcessing = false;
   double? _fps;
   double _confidenceThreshold = 0.5;
@@ -60,7 +61,7 @@ class CameraScreenState extends State<CameraScreen>
 
   Future<void> imageAnalysis(CameraImage cameraImage) async {
     // if image is still analyze, skip this frame
-    if (_isProcessing) {
+    if (_isProcessing || !_isHelperInitialized) {
       return;
     }
     _isProcessing = true;
@@ -111,7 +112,9 @@ class CameraScreenState extends State<CameraScreen>
     WidgetsBinding.instance.addObserver(this);
     initCamera();
     imageClassificationHelper = ImageClassificationHelper();
-    imageClassificationHelper.initHelper();
+    imageClassificationHelper.initHelper().then((_) {
+      _isHelperInitialized = true; // Now we can pass frames to the model
+    });
     super.initState();
   }
 
@@ -177,7 +180,7 @@ class CameraScreenState extends State<CameraScreen>
     try {
       XFile pic = await cameraController.takePicture();
       pic.saveTo(filePath);
-      debugPrint('Providing user feedback from $filePath');
+      log('Providing user feedback from $filePath');
       if (_storedClassification != null) {
         showDialog(
           context: context,
@@ -190,7 +193,7 @@ class CameraScreenState extends State<CameraScreen>
         );
       }
     } catch (e) {
-      debugPrint(e as String?);
+      log("Couldn't take picture. Error: $e");
     }
   }
 
@@ -209,8 +212,9 @@ class CameraScreenState extends State<CameraScreen>
 
     list.add(Align(
       alignment: Alignment.topRight,
-      child: IconButton(
-        icon: const Icon(Icons.camera_alt, color: Colors.white),
+      child: FloatingActionButton(
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.camera_alt, color: Colors.white),
         onPressed: () async {
           await takePicture();
         },
@@ -296,8 +300,8 @@ class CameraScreenState extends State<CameraScreen>
       ),
     ));
 
-    return SafeArea(
-      child: Stack(
+    return Scaffold(
+      body: Stack(
         children: list,
       ),
     );

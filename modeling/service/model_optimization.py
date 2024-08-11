@@ -15,7 +15,7 @@ def model_training(model, train_data, validation_data, epochs=TRAIN_EPOCHS):
     tensorboard_tracking = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
     early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor='val_auc',  # Monitor validation AUC
+        monitor='val_loss',  # Monitor validation AUC
         mode='max',         # Stop when the AUC stops increasing
         patience=18,        # Number of epochs with no improvement after which training will be stopped
         restore_best_weights=True  # Restore model weights from the epoch with the best AUC

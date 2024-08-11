@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -37,16 +38,24 @@ class _FeedbackPopupState extends State<FeedbackPopup> {
   Future<void> sendFeedback(BuildContext context) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final feedbackString = widget.classification.entries.map((entry) {
+      log("entry: ${entry.key} - ${entry.value}");
+      log("selectedCategories: $selectedCategories");
       final category = entry.key;
       final value = entry.value;
-      final selected = selectedCategories[category]!;
+      bool selected = false;
+      if (selectedCategories.containsKey(category)) {
+        selected = selectedCategories[category]!;
+        log('Selected $category: $selected');
+      } else {
+        log('Category $category not found in selectedCategories');
+      }
       return '${selected ? 1 : 0}-${value.toStringAsFixed(1)}';
     }).join('_');
     final fileName = '${timestamp}_$feedbackString.jpg';
     final file = File(widget.imagePath);
-
+    log("Sending feedback to Firebase: $fileName");
     try {
-      await FirebaseStorage.instance.ref('feedback/$fileName').putFile(file);
+      await FirebaseStorage.instance.ref('$fileName').putFile(file);
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Feedback sent successfully')));
     } catch (e) {
