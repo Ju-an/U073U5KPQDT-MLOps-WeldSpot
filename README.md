@@ -418,8 +418,6 @@ I recommend creating a few, so the system can split them (currently for each ima
 
 Found in `training_pipeline.py`, in charge of training a new model (not automatic, needs manual trigger but I already ran it and provided the starting weld_0 model) and retraining when there are drifts.
 
-![Train flow](images/PrefectTrain.png)
-
 The retraining is scheduled in `register_flows.py` after the data collection, so when new split with drift is detected it retrains the latest model.
 Model is stored in the orchestrated container (`models/best` folder) with suffixes for every subsequent version.
 
@@ -448,19 +446,22 @@ This way, combined with the prefect flows telling us if the moel was deployed or
 After building the app, and installing it (your device may trigger some warning dialog about installing app outside from android app store or about analyzing the app for security) in your device, you can find the app named "image_classification_mobilenet". The app presents you with a the view of your phone camera (accepting permissions may be required).
 
 ###### Note it may look frozen for a few seconds when you open it because it's downloading and loading the model into memory (and I haven't programmed a "loading" screen, apologies).
+In case the app hangs the first time you can try closing it and restarting it.
 
-![Main flutter view](images/FlutterMain.png)
+![Main flutter view](images/FlutterApp.png)
 
 The view will show us a panel below with the most probable classes predicted in the image in real-time. It also shows the time frequency of predictions (e.g., FPS, how long it took to pass the image through the model). Performance of predictions may vary depending on smartphone power.
 
 The user can press a capture button, to trigger their feedback by taking a picture from the current camera.
 **![Privacy Warning](images/Warning.png) Beware that you should compile your own app with its configuration pointing to YOUR Firebase cloud so YOUR own Prefect cloud triggers**.
 
-![Flutter feedback](images/FlutterFeedback.png)
-
 Here the user can manually tell which classes are showing and which not by checking the boxes. Then the image will be sent to Firebase storage with those corrections.
 
-###### Note it may also take a few seconds for the picture to be taken and show the selection as I also haven't optimized that part either.
+###### Note it may also take a few seconds for the picture to be taken and show the selection as I also haven't optimized that part either. And also to upload to the Firebase Server (when the Send Feedback popup closes it means it has completed sending the image).
+
+![Image uploaded](images/FirebaseStorage.png)
+
+Here we can see the image in our bucket. So the prefect pipeline will analyze them... _and then the cycle repeats_. **Thanks for reviewing!**
 
 # Conclusions
 

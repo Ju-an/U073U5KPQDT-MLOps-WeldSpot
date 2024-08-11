@@ -213,7 +213,7 @@ class CameraScreenState extends State<CameraScreen>
     list.add(Align(
       alignment: Alignment.topRight,
       child: Padding(
-          padding: const EdgeInsets.only(top: 18.0),
+          padding: const EdgeInsets.only(top: 36.0),
           child: FloatingActionButton(
             backgroundColor: Colors.blue,
             child: const Icon(Icons.camera_alt, color: Colors.white),

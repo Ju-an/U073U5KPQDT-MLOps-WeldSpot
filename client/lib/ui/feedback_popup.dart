@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -37,17 +38,28 @@ class _FeedbackPopupState extends State<FeedbackPopup> {
 
   Future<void> sendFeedback(BuildContext context) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
+    log("selectedCategories: $selectedCategories");
+    final List<String> keys = selectedCategories.keys.toList();
+    final List<bool> values =
+        keys.map((key) => selectedCategories[key]!).toList();
     final feedbackString = widget.classification.entries.map((entry) {
       log("entry: ${entry.key} - ${entry.value}");
-      log("selectedCategories: $selectedCategories");
-      final category = entry.key;
+      final category =
+          entry.key.replaceAll('\r', '').replaceAll('\n', '').trim();
       final value = entry.value;
       bool selected = false;
-      if (selectedCategories.containsKey(category)) {
-        selected = selectedCategories[category]!;
+      int index = -1;
+      for (int i = 0; i < categories.length; i++) {
+        if (categories[i] == category) {
+          index = i;
+          break;
+        }
+      }
+      if (index != -1) {
+        selected = values[index];
         log('Selected $category: $selected');
       } else {
-        log('Category $category not found in selectedCategories');
+        log('Category $category not found in $values');
       }
       return '${selected ? 1 : 0}-${value.toStringAsFixed(1)}';
     }).join('_');
