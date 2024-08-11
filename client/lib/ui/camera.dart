@@ -212,13 +212,15 @@ class CameraScreenState extends State<CameraScreen>
 
     list.add(Align(
       alignment: Alignment.topRight,
-      child: FloatingActionButton(
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.camera_alt, color: Colors.white),
-        onPressed: () async {
-          await takePicture();
-        },
-      ),
+      child: Padding(
+          padding: const EdgeInsets.only(top: 18.0),
+          child: FloatingActionButton(
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.camera_alt, color: Colors.white),
+            onPressed: () async {
+              await takePicture();
+            },
+          )),
     ));
 
     list.add(Align(
