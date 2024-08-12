@@ -1,4 +1,4 @@
-import logging
+import logging, subprocess
 from prefect import flow
 from prefect.deployments import Deployment
 from prefect.server.schemas.schedules import CronSchedule
@@ -9,8 +9,8 @@ from flows.training_pipeline import initial_training_flow, periodic_retraining_f
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATASET_SCHEDULE = "0 12 * * *"  # Daily at 12:00 PM
-MODELING_SCHEDULE = "0 13 * * *"  # Daily at 13:00 PM
+DATASET_SCHEDULE = "*/7 * * * *"  # Every 5 minutes
+MODELING_SCHEDULE = "*/12 * * * *"  # Every 5 minutes
 
 @flow
 def register_flows():
@@ -27,7 +27,7 @@ def register_flows():
     )
 
     logger.info("Registering initial training flow")
-    initial_training_flow()
+    # initial_training_flow()
 
     logger.info("Creating modeling deployment pipeline")
     modeling_pipeline = Deployment.build_from_flow(
@@ -49,3 +49,5 @@ def register_flows():
 # Register the flows with Prefect
 if __name__ == "__main__":
     register_flows()
+    # prefect agent start --pool "default-agent-pool"
+    subprocess.Popen(["prefect", "agent", "start", "--pool", "default-agent-pool"])

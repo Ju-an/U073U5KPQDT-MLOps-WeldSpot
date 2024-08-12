@@ -53,14 +53,6 @@ integration_test: unit_tests
 	echo "Testing model service" && \
 	PYTHONPATH=$(PROJECT_PATH) python flows/training_pipeline.py
 
-list_flows:
-	source .venv/bin/activate && \
-	PYTHONPATH=$(PROJECT_PATH) prefect deployment ls
-
-run_flow:
-	source .venv/bin/activate && \
-	PYTHONPATH=$(PROJECT_PATH) prefect deployment run $(FLOW_NAME)
-
 build_image:
 	sudo docker build -t $(DOCKER_IMAGE_NAME) .
 

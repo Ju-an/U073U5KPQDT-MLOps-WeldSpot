@@ -103,6 +103,7 @@ def evaluate_performance(model, initial_test, test=None):
 @task
 def find_data(initial=False, root="."):
     if initial:
+        print("Looking for initial data")
         return *get_split_generators(INITIAL_PATH if root == "." else root), False
     directories = [
         f

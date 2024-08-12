@@ -1,5 +1,5 @@
 
-# Weld Spot - Detecting Defects in Welding
+# Weld Spot - Detecting Defects in Welding - MLOps
 
 Welding consists in joining metal parts together by melting and cooling them. The process involves heat, chemicals and other materials.
 The quality of the welding may vary depending on several factors, like the positions, quantity and quality of the materials, pressure, heat, and so on. Defects that welding may result in include cracks, porosity (e.g., air bubbles), tearing, etc.
@@ -14,6 +14,18 @@ This project proposes the use of computer vision to automate the visual inspecti
 
 The application of AI requires a lot of components that should communicate well. So, applying MLOps practices will be important for the success of the project.
 
+## Tasks summary
+
+1. **Problem description**: Problem and solution are clearly explained.
+2. **Cloud**: Project utilizes cloud and containers, although not kubernetes neither IaC.
+3. **Experiment tracking and model registry**: TensorBoard for tracking the model training and Firebase ML to store models.
+4. **Workflow orchestration**: Prefect 2 registered with Prefect Cloud service.
+5. **Model deployment**: Models are deployed through Firebase and Flutter.
+6. **Model monitoring**: Flutter and Prefect are monitoring drift and send email alert. Only logged values, no graphics.
+7. **Reproducibility**: Instructions and configuration scripts are provided to _make_ it easy.
+8. **CI/CD**: Version control with GitHub. Unit (with pytest) and integration tests. Deployment of the app is manual.
+9. **Other practices**: Makefiles for the scripts, simple pre-commit hook. isort, black and pylint employed for formatting and linting.
+
 ---
 
 # Table of Contents
@@ -25,6 +37,30 @@ The application of AI requires a lot of components that should communicate well.
     - [Containers](#Containers)
   - [Client](#Client)
 - [Installation](#Installation)
+  - [Accounts setting](#Accounts-setting)
+    - [Roboflow](#Roboflow)
+    - [Prefect 2](#Prefect-2)
+      - [Automation](#Automation)
+    - [Firebase](#Firebase)
+      - [Flutter](#Flutter)
+      - [Storage](#Storage)
+      - [Authentication](#Authentication)
+      - [Firebase ML](#Firebase-ML)
+      - [Admin download](#Admin-download)
+  - [Project setting](#Project-setting)
+  - [Building](Building)
+    - [Modeling service](#Modeling-service)
+    - [Client app](#Client-app)
+  - [Running the service](#Running-the-service)
+    - [Orchestration](#Orchestration)
+      - [Data Collection](#Data-Collection)
+      - [Forcing retraining](#Forcing-retraining)
+      - [Model training](#Model-training)
+      - [Experiment Tracking](#Experiment-Tracking)
+    - [Flutter app usage](#Flutter-app-usage)
+- [Conclusions](#Conclusions)
+  - [Future work](#Future-work)
+  - [Thanks](#Thanks)
 
 ---
 
@@ -136,13 +172,13 @@ The retraining can be manually triggered from the cloud without the need of the 
 
 It is recommended to use a clean installation of linux (or WSL, or a docker container), preferably Ubuntu 22.04+,
 as the setup script installs several packages, including specific android sdk version. I used Ubuntu 24.04 with Python 3.10.
-If conflicts arise, you may check the Makefile `setup` and `dependencies_` scripts (more info on this later) for troubleshooting or try to clean your system (I take no responsibility if your machine breaks, sorry).
+If conflicts arise, you may check the Makefile `setup` and `dependencies_` scripts (more info on this later) for troubleshooting or try to clean your system.
 
 ## Accounts setting
 
 All of the 3 services we are going to create an account with allow to use google and similar accounts to avoid having to create accounts with mail and password. So you may consider that. The accounts are also easy to create (the classic register-login and you're in) and don't require inputting private info like credit cards (we are going to use free tiers with limited features).
 
-### Roboflow
+### [Roboflow](https://universe.roboflow.com/)
 
 From Roboflow we only require an API key so they allow us to download datasets from python code.
 
@@ -158,7 +194,7 @@ From Roboflow we only require an API key so they allow us to download datasets f
 
 5. The rest of the script is already configured in the project, we only need to copy that hidden text by selecting it normally and pasting it. **Copy it to a text note as we will use it later**.
 
-### [Prefect 2](https://docs.prefect.io/latest/).
+### [Prefect 2](https://docs.prefect.io/latest/)
 
 1. Access [Prefect Cloud](https://app.prefect.cloud/) and sign-in.
 2. Configure your account if you haven't yet, with a name that hasn't been used by other users.
@@ -199,7 +235,7 @@ Here we are going to send an alert when there is drift. So, besides retraining (
 
 5. We set the block with your e-mail as in the picture and confirm. Save your automation and you're done.
 
-### [Firebase](https://firebase.google.com/).
+### [Firebase](https://firebase.google.com/)
 
 1. Sign-in into [Firebase Console](https://console.firebase.google.com/u/0/) and create a project with "Start with Firebase Project" option. (We **don't** need credit card information).
 
@@ -209,11 +245,9 @@ Here we are going to send an alert when there is drift. So, besides retraining (
 
 3. We don't need to use Google Analytics for our project. Create Project and wait for resources to be provided.
 
-#### Features
-
 We now have to setup a series of features so the firebase project works with our project.
 
-##### Flutter (Firebase)
+#### Flutter
 
 Flutter is an SDK maintained by Google that uses the Dart programming language (don't worry, the app is already programed, you don't need to know) for developing cross-platform apps. So, with a single code base we can deploy an app to iOS, Android, Web, Windows, Linux, etc. It also integrates well with Firebase and with Tensorflow Lite (ML model format). Android emulators can be used to test the app, but running the ML model will be better in a real device (you may want to enable developer mode on your device for debuging the android app if you are interested).
 
@@ -228,7 +262,7 @@ In the Firebase Console, after selecting the project, we will see a Get Started 
 
 3. _Initialize Firebase_: Again, we automated this part, so no need to run or add code. Accept and go to firebase console.
 
-#### Storage (Firebase)
+#### Storage
 
 Images sent by users must be stored in the cloud for their analysis for drift and retraining.
 Firebase offers multiple solutions for storing data.
@@ -249,7 +283,7 @@ We will now copy the bucket URL, it should look like "gs://project-name-id.appsp
 From this bucket, in case you cannot run the app, you can upload images directly to force retraining and test the drift logic.
 More on this topic in the [orchestration section](#Orchestration).
 
-#### Authentication (Firebase)
+#### Authentication
 
 Because users upload images to the cloud, we require authentication to connect to the service. End-users will be able to send images for the drift analysis and retraining when logged in.
 
@@ -382,6 +416,13 @@ They all depend on the code programmed inside the `service` folder, which you ca
 
 This section details the Prefect flows created (orchestration pipelines of our services). You can take a look at the code and check the functions called as well.
 
+Before the first time we start the service (e.g., by runing `make run_app` or starting the docker image), we should return to Prefect Cloud.
+In Prefect Cloud, go to "Deployments" section from the left panel, and it will bring to a screen similar to when you created your account.
+If you ran the `make setup` correctly, now it will tell that you are logged in. Then you continue to Schedule your first flow.
+It will say that is waiting for your first deployment. Now you can start the orchestration (`make run_app`) and wait for it to create.
+
+![Deploying prefect](images/PrefectDeployment.png)
+
 The pipelines are currently configured to run every day at fixed time. Although we would turn that to weekly so there is enough time to gather more images.
 You can change this in the `register_flows.py` so they run sooner and you can check how they do, or you can manually force them to start.
 
@@ -402,9 +443,9 @@ The metric to monitor that I set is AUC. AUC (Area Under the Curve) is a metric 
 
 When drift is detected (the AUC goes below the threshold configured in options) it will generate the split with the new data so that the training service finds and retrains last model with them.
 
-We can manually start the periodic flow of data collection by running `make list_flows`
+![Drift alert](images/PrefectMail.png)
 
-##### Forcing retraining
+#### Forcing retraining
 
 The client app uploads the images named as an ID, and the corrected classes by the users with the model detection chance for each class.
 In our case, the predicted classes can be: [Background, Bad Welding, Crack, Excess Reinforcement, Good Welding, Porosity, Splatters] in that order, with indexes from 0 to 6 of the model output.
@@ -432,9 +473,11 @@ After training the model, it is evaluated with both a test split generated from 
 
 If the new model AUC is suficient, it will also be uploaded to the Firebase ML storage so that the client apps download that new version.
 
+![Firebase model](images/ModelUpload.png)
+
 Again, model training can be configure in the `options.py`. Additionally, we can also monitorits performance.
 
-##### Experiment Tracking:
+#### Experiment tracking
 
 For experiment tracking, we've seen MLFlow in the course. Because I already had experience with TensorBoard, the project uses TensorFlow, and TensorFlow has insights for image models (e.g., CNN), I've decided to use TensorBoard.
 Tensorflow offers TensorBoard to monitor and view graphics of training performance. The data it generates is stored in the `logs/fit` folder most like MLFlow stores its runs, so that they can be viewed from a browser.
@@ -481,7 +524,12 @@ As expected from any beginning, some challenges appeared that had to be overcome
 Mostly, errors in developing and building the infrastructure required learning new things, dropping some requirements or finding other tools in order to workaround the problems.
 Overall, it was a good experience to prove the concepts and gain new skills.
 
-## Future work
+## Limitations
+
+Due to time constrictions, the project has limited monitoring, with simple tracking and alert.
+I also had little time to comment the source code, so I hope it is easy to understand.
+It would have been interesting to include more automation so less manual steps are required.
+With more time, things can become better.
 
 Possible applications and improvements that could be made to this project (either to the MLOps cycle or the app features) include:
 
@@ -492,6 +540,7 @@ Possible applications and improvements that could be made to this project (eithe
 * **MLOps**: Improve the pipeline and offer better models.
 * **MLOps**: Add grouping for the uploaded images. For instance, the images from multiple users of the same company for training a model specificaly for them.
 * **MLOps**: Anonymize images (e.g., blur faces) and ensure data privacy (encryption and authentication).
+* **MLOPS**: Use federated learning to avoid sending the private images to the server.
 * **Features**: Automatic detection on production lines.
 * **Features**: Assists in expertise audits.
 * **Features**: Add detection boxes and segmentation capabilities (detect exact pixels instead of the bounding box).
