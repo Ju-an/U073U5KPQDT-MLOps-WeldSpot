@@ -7,14 +7,7 @@ from prefect import flow, task
 from prefect.events import emit_event
 from prefect.task_runners import SequentialTaskRunner
 
-from options import (
-    AUGMENTED_PATH,
-    CLASS_NAMES,
-    PROCESSED_PATH,
-    RAW_PATH,
-    SPLIT_NAMES,
-    SPLIT_PATH,
-)
+from options import AUGMENTED_PATH,CLASS_NAMES,PROCESSED_PATH,RAW_PATH,SPLIT_NAMES,SPLIT_PATH,AUC_THRESHOLD
 from service.cloud_storage import download_firebase, download_roboflow
 from service.image_transformations import (
     augment_images,
@@ -127,9 +120,15 @@ def periodic_monitoring_flow():
     metrics, drift = drift_detection()
     if metrics is not None:
         print("Metrics obtained:")
+        fails = 0
+        corrects = 0
         for class_name, m in metrics.items():
             print(f"{class_name}: {m}")
-    if drift is None:
+            fails += m["FP"] + m["FN"]
+            corrects += m["TP"] + m["TN"]
+        margin = fails / (fails + corrects)
+        drift = margin < AUC_THRESHOLD
+    if drift:
         print("skipping after no drift detected.")
         empty_folder(RAW_PATH)
         return

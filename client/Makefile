@@ -35,11 +35,15 @@ register:
 	flutter pub get
 
 build_apk:
+	export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64" && \
+	export PATH=$$JAVA_HOME/bin:$$PATH && \
 	export PATH=$(HOME)/fluttersdk/bin:$$PATH && \
 	export PATH="$$PATH:$(HOME)/.pub-cache/bin:/mnt/c/Windows/system32" && \
 	flutter build apk --release --split-per-abi
 
 build_apk_debug:
+	export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64" && \
+	export PATH=$$JAVA_HOME/bin:$$PATH && \
 	export PATH=$(HOME)/fluttersdk/bin:$$PATH && \
 	export PATH="$$PATH:$(HOME)/.pub-cache/bin:/mnt/c/Windows/system32" && \
 	flutter build apk --debug

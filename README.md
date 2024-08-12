@@ -16,13 +16,13 @@ The application of AI requires a lot of components that should communicate well.
 
 ## Tasks summary
 
-1. **Problem description**: Problem and solution are clearly explained.
+1. **Problem description**: Problem and solution explained in this readme, as well as rest of instructions.
 2. **Cloud**: Project utilizes cloud and containers, although not kubernetes neither IaC.
 3. **Experiment tracking and model registry**: TensorBoard for tracking the model training and Firebase ML to store models.
 4. **Workflow orchestration**: Prefect 2 registered with Prefect Cloud service.
 5. **Model deployment**: Models are deployed through Firebase and Flutter.
 6. **Model monitoring**: Flutter and Prefect are monitoring drift and send email alert. Only logged values, no graphics.
-7. **Reproducibility**: Instructions and configuration scripts are provided to _make_ it easy.
+7. **Reproducibility**: Instructions and configuration scripts are provided to _make_ it easy. Including creating accounts and running the project.
 8. **CI/CD**: Version control with GitHub. Unit (with pytest) and integration tests. Deployment of the app is manual.
 9. **Other practices**: Makefiles for the scripts, simple pre-commit hook. isort, black and pylint employed for formatting and linting.
 
@@ -437,6 +437,10 @@ The initial run will download the Roboflow dataset. Additionally it has a flow p
 The initial dataset collection (from Roboflow) takes some time because it downloads around 3k images.
 Because the dataset is big and has several augmented images (although the page states they don't), we only do an additional augmentation (1 original image = 2 end images). The retraining with (less images downloaded) from the user feedbacks is configured with 8 augmentations.
 
+In case that no drift is found, you can see the collection does not proceed further.
+
+![Initial flow](images/NoDriftNoTrain.png)
+
 The metric to monitor that I set is AUC. AUC (Area Under the Curve) is a metric to measure how well a model can distinguish between different classes.
 
 ![Periodic flow](images/PrefectPeriodicCollection.png)
@@ -460,6 +464,10 @@ For example `A0Z_1-0.9_0-0.1_0-0.2_0-0.3_0-0.4_0-0.5_0-0.6` means "A0Z" ID (just
 So, we can upload a random image with the name "xd_1-0.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0_0-1.0.jpg" to the bucket manually, or use the flutter app to contradict a prediction. So, passing that image will say the model is 100% wrong and requires retraining (although more images in a real scenario would be advised to fight bias).
 I recommend creating a few, so the system can split them (currently for each image, it generates 8 additional augmented versions, see `options.py` for more info). If no new images are available, the flow will not continue.
 
+To manually trigger the flows so you don't wait for their schedule you can go to the deployments and run them:
+
+![Manual Trigger](images/PrefectQuick.png)
+
 #### Model Training
 
 Found in `training_pipeline.py`, in charge of training a new model (not automatic, needs manual trigger but I already ran it and provided the starting weld_0 model) and retraining when there are drifts.
@@ -475,7 +483,7 @@ If the new model AUC is suficient, it will also be uploaded to the Firebase ML s
 
 ![Firebase model](images/ModelUpload.png)
 
-Again, model training can be configure in the `options.py`. Additionally, we can also monitorits performance.
+Again, model training can be configure in the `options.py`. Additionally, we can also monitor its performance.
 
 #### Experiment tracking
 

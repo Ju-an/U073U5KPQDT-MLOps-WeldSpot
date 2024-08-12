@@ -15,12 +15,8 @@ FIREBASE_STORAGE_BUCKET_NAME = os.environ.get("FIREBASE_STORAGE_BUCKET")
 ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY")
 
 # Batch size = the number of images passed together to the train step (higher = faster but more memory)
-TRAIN_BATCH_SIZE = os.environ.get(
-    "BATCH_SIZE", 16
-)  # Load from .env file or use default value 16.
-TRAIN_EPOCHS = os.environ.get(
-    "EPOCHS", 10
-)  # Load from .env file or use default value 10. More epochs = more training (better but slower)
+TRAIN_BATCH_SIZE = os.environ.get("BATCH_SIZE", 160)  # Load from .env file or use default value 16.
+TRAIN_EPOCHS = os.environ.get("EPOCHS", 10)  # More epochs = more training (better but slower)
 
 # Verbosity of the training process.
 TRAINING_VERBOSITY = 1 # 0 = silent, 1 = single progress bar, 2 = one progress per epoch (most detailed)
@@ -37,10 +33,7 @@ TEMP_PATH = "tmp"  # Folder for temporary files
 # Number of (additional) augmented images generated from each image
 AUGMENTATION_INCREASE = 8
 # The target size of the images used by the model (higher = more accurate but slower to train/infer)
-TARGET_SIZE = (
-    256,
-    256,
-)
+TARGET_SIZE = (256,256)
 
 # Don't change the following:
 # Stores the initial dataset downloaded from Roboflow

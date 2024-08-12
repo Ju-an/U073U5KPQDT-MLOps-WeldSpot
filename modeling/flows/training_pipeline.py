@@ -102,6 +102,7 @@ def evaluate_performance(model, initial_test, test=None):
 
 @task
 def find_data(initial=False, root="."):
+    global latest_split
     if initial:
         print("Looking for initial data")
         return *get_split_generators(INITIAL_PATH if root == "." else root), False
@@ -118,14 +119,14 @@ def find_data(initial=False, root="."):
     path = sorted(directories, reverse=True)[0]
     repeating = path == latest_split
     latest_split = path
-    return *get_split_generators(path), repeating
+    return *get_split_generators(f"{root}/{path}"), repeating
 
 
 @flow
 def initial_training_flow():
     model = create_model()
     data = find_data(initial=True)
-    train_model(model, data, epochs=1)
+    train_model(model, data, epochs=100)
     save_model(model)
     deploy_model(model, tags=["initial", "weld", "mobilenet"])
     evaluation = evaluate_performance(model, data[2])
