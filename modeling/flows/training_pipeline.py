@@ -143,7 +143,7 @@ def periodic_retraining_flow():
     else:
         current_path = last_model_path()
         print(f"Loading model from {current_path}")
-        model = load_model(current_version)
+        model = load_model(current_path)
         train_model(model, data)
         save_model(model)
         evaluation = evaluate_performance(model, find_data(True)[2], data[2])

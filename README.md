@@ -475,11 +475,9 @@ Found in `training_pipeline.py`, in charge of training a new model (not automati
 The retraining is scheduled in `register_flows.py` after the data collection, so when new split with drift is detected it retrains the latest model.
 Model is stored in the orchestrated container (`models/best` folder) with suffixes for every subsequent version.
 
-![Retrain flow](images/PrefectRerain.png)
-
 After training the model, it is evaluated with both a test split generated from that last new (drifted) data collected, and the initial test split.
 
-If the new model AUC is suficient, it will also be uploaded to the Firebase ML storage so that the client apps download that new version.
+If the new model AUC is suficient, it will also be uploaded to the Firebase ML storage so that the client apps download that new version. If not, you can still manually upload it if needed.
 
 ![Firebase model](images/ModelUpload.png)
 

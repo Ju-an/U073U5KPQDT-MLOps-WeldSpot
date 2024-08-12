@@ -76,6 +76,10 @@ def mobilenet_model():
 
 def model_load(path):
     print(f"Loading model from {path}")
+    if(path is not None and path != ""):
+        p = f"{path}"
+        if (len(p) <= 2):
+            path = f"models/best/weld_{path}.keras"
     model = tf.keras.models.load_model(path)
     model.compile(
         optimizer=Adam(learning_rate=0.001),
