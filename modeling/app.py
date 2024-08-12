@@ -11,7 +11,10 @@ def main():
     print(FIREBASE_SDK_ADMIN_FILE_PATH, FIREBASE_STORAGE_BUCKET_NAME)
     print(storage)
     print("Launching TensorBoard service")
-    subprocess.Popen(["tensorboard", "--logdir=logs/fit/", "--port=6006"])
+    try:
+        subprocess.Popen(["tensorboard", "--logdir=logs/fit/", "--port=6006"])
+    except Exception as e:
+        print(f"Error launching TensorBoard: {e}")
     print("Starting Collection and Modeling service.")
     register_flows()
 

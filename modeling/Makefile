@@ -64,4 +64,5 @@ run_image: build_image
 
 run_app:
 	source .venv/bin/activate && \
-	PYTHONPATH=$(PROJECT_PATH) python3 app.py
+	PYTHONPATH=$(PROJECT_PATH) python3 app.py && \
+	prefect agent start --pool "default-agent-pool" --work-queue "default"

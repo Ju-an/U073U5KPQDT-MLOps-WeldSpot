@@ -119,14 +119,15 @@ def find_data(initial=False, root="."):
     path = sorted(directories, reverse=True)[0]
     repeating = path == latest_split
     latest_split = path
-    return *get_split_generators(f"{root}/{path}"), repeating
+    return *get_split_generators(f"{root}/{SPLIT_PATH}/{path}"), repeating
 
 
 @flow
 def initial_training_flow():
     model = create_model()
     data = find_data(initial=True)
-    train_model(model, data, epochs=100)
+    print(f"Found data generators: {data}")
+    train_model(model, data, epochs=5)
     save_model(model)
     deploy_model(model, tags=["initial", "weld", "mobilenet"])
     evaluation = evaluate_performance(model, data[2])
@@ -160,7 +161,7 @@ if __name__ == "__main__":
     os.makedirs("temp", exist_ok=True)
     data = find_data(True, "temp")
     print("Train model")
-    model_training(model, data[0], data[1], 256)
+    model_training(model, data[0], data[1], 10)
     print("Model trained")
     os.makedirs("temp/models", exist_ok=True)
     os.makedirs("temp/models/best", exist_ok=True)

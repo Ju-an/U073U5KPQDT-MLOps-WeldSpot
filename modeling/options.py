@@ -15,7 +15,7 @@ FIREBASE_STORAGE_BUCKET_NAME = os.environ.get("FIREBASE_STORAGE_BUCKET")
 ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY")
 
 # Batch size = the number of images passed together to the train step (higher = faster but more memory)
-TRAIN_BATCH_SIZE = os.environ.get("BATCH_SIZE", 160)  # Load from .env file or use default value 16.
+TRAIN_BATCH_SIZE = os.environ.get("BATCH_SIZE", 16)  # Load from .env file or use default value 16.
 TRAIN_EPOCHS = os.environ.get("EPOCHS", 10)  # More epochs = more training (better but slower)
 
 # Verbosity of the training process.

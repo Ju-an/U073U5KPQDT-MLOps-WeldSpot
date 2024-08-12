@@ -75,6 +75,7 @@ def mobilenet_model():
 
 
 def model_load(path):
+    print(f"Loading model from {path}")
     model = tf.keras.models.load_model(path)
     model.compile(
         optimizer=Adam(learning_rate=0.001),
