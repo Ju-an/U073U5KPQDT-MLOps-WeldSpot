@@ -15,7 +15,7 @@ MODELING_SCHEDULE = "0 13 * * *"  # At 13:00 every day
 @flow
 def register_flows():
     logger.info("Registering initial dataset flow")
-    # initial_dataset_flow()
+    initial_dataset_flow()
 
     logger.info("Creating dataset deployment pipeline")
     dataset_pipeline = Deployment.build_from_flow(
